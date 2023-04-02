@@ -7,7 +7,7 @@
 
 import os
 
-from setuptools import Command, find_packages, setup
+from setuptools import find_packages, setup
 
 # package meta-data
 NAME = "repic"
@@ -19,7 +19,6 @@ REQUIRES_PYTHON = ">=3.8.16"
 
 # required packages
 REQUIRED = [
-    "gurobipy",
     "matplotlib>=3.2.2",
     "mrcfile>=1.4.3",
     "networkx>=2.8.4",

@@ -15,35 +15,21 @@ Required:
 1. Python v3.8 interpreter ([Miniconda](https://docs.conda.io/en/latest/miniconda.html) installation recommended)
 2. [Gurobi ILP optimizer](https://www.gurobi.com/products/gurobi-optimizer/) (v9.5.2 used) - requires free [academic license](https://www.gurobi.com/downloads/)
 3. Python package dependencies described in [setup.py](setup.py)
+4. _Windows users_ - [Ubuntu terminal environment with Windows Subsystem for Linux (WSL)](https://ubuntu.com/tutorials/install-ubuntu-on-wsl2-on-windows-10#1-overview) (v22.04.2 LTS tested)
 
 *Optional:* 
 1. [REgularised LIkelihood OptimisatioN (RELION)](https://relion.readthedocs.io/en/release-3.1/) - particle and density analyses (v3.13 used)
 2. [UCSF Chimera](https://www.cgl.ucsf.edu/chimera/) - map alignment and density visualization (v1.16 used)
 
 ## Installation guide
-REPIC installation is expected to only take a few minutes using one of the following methods:
-
-**<details><summary>*Conda installation (recommended)*</summary><p>**
-
-1. [Install Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links) if the ``` conda ``` command is unavailable
-2. We recommend installing REPIC in a separate Conda environment:\
-``` conda create -n repic -c bioconda repic ```
-3. Activate REPIC Conda environment:\
-``` conda activate repic ```
-4. [Obtain Gurobi license](https://www.gurobi.com/academia/academic-program-and-licenses/) and set Gurobi key ``` grbgetkey <gurobi_key> ```
-5. Remove unused or temporary Conda files:\
-``` conda clean --all ```
-
-</p></details>
-
-**<details><summary>*Install from source*</summary><p>**
+REPIC installation is expected to only take a few minutes:
 
 1. Either download the package by clicking the "Clone or download" button, unziping file in desired location, and renaming the directory "REPIC" OR using the following command line:\
 ``` git clone https://github.com/ccameron/REPIC ```
 2. [Install Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links) if the ``` conda ``` command is unavailable
 3. ``` cd <install_path>/REPIC ```
-4. We recommend creating a separate Conda environment for REPIC:\
-``` conda create -n repic python=3.8 ```
+4. Create a separate Conda environment and install Gurobi for REPIC:\
+``` conda create -n repic -c gurobi python=3.8 gurobi```
 5. Activate REPIC Conda environmnet:\
 ``` conda activate repic ```
 6. Install REPIC using [pip](https://en.wikipedia.org/wiki/Pip_(package_manager)):\
@@ -51,8 +37,6 @@ REPIC installation is expected to only take a few minutes using one of the follo
 7. [Obtain Gurobi license](https://www.gurobi.com/academia/academic-program-and-licenses/) and set Gurobi key ``` grbgetkey <gurobi_key> ``` 
 8. Remove unused or temporary Conda files:\
 ``` conda clean --all ```
-
-</p></details>
 
 To check if REPIC was correctly installed, run the following command:\
 ``` repic -h ```\
@@ -92,7 +76,7 @@ Correctly executing the above command will produce a particle coordinate file (i
 ### Particle picking by iterative ensemble learning
 1. Download example data from AWS S3 bucket using [get_examples.sh](repic/iterative_particle_picking/get_examples.sh) (expected run time: 1-5 mins):
 
-``` bash repic/iterative_particle_picking/get_examples.sh examples/10057/data/ &> aws_download.log ```
+``` bash $(pip show repic | grep -in "Location" | cut -f2 -d ' ')/repic/iterative_particle_picking/get_examples.sh examples/10057/data/ &> aws_download.log ```
 
 2. Create a configuration file for iterative ensemble particle picking using [iter_config.py](repic/commands/iter_config.py) (expected run time: <1 min):
 
