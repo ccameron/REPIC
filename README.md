@@ -190,6 +190,6 @@ The REPIC software has been tested on two computer systems:
 2. Ubuntu 16.04.7 LTS (Xenial Xerus) running CUDA v11.3 with four Nvidia GeForce GTX 1080
 
 ## Citing REPIC
-If REPIC was used in your analysis / study, please cite:
+If REPIC was used in your analysis/study, please cite:
 
-Christopher JF Cameron, Sebastian JH Seager, Frederick J Sigworth, Hemant D Tagare, and Mark B Gerstein. REPIC - an ensemble methodology for cryo-EM particle picking. In review. DOI: [TBD](https://www.youtube.com/watch?v=u6M-Ccp60zU)
+Cameron, C.J.F., Seager, S.J.H., Sigworth, F.J., Tagare, H.D., and Gerstein, M.B. **REPIC - an ensemble learning methodology for cryo-EM particle picking**. *BioRxiv*. DOI: [10.1101/2023.05.13.540636v1](https://www.biorxiv.org/content/10.1101/2023.05.13.540636v1)
