@@ -12,7 +12,6 @@ from bisect import bisect, bisect_right
 from tqdm import tqdm
 
 name = "build_subsets"
-use_defocus_values = True
 rng = np.random.default_rng(0)  # set for reproducibility
 
 
@@ -114,6 +113,7 @@ def sample_from_bin(bins, i):
 
 def main(args):
 
+    use_defocus_values = True
     if not os.path.isfile(args.defocus_file):
         print(
             f"Error - defocus file '{args.defocus_file}' not found. Micrographs will be equally weighted")

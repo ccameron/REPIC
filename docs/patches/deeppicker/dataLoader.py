@@ -5,6 +5,7 @@
 
 import display
 import matplotlib.pyplot as plt
+import mrcfile  # REPIC_PATCH
 import numpy as np
 import os
 import pickle
@@ -255,43 +256,49 @@ class DataLoader(object):
             print("ERROR:%s is not a valid file." % (fileName))
             return
 
-        f = open(fileName, "rb")
-        data = f.read()  # read all data
-        f.close()
+        # REPIC_PATCH
+        with mrcfile.open(fileName, mode='r', permissive=True) as mrc:
+            header = mrc.header.tolist()
+            body = mrc.data.astype(np.float32)
+        del mrc
 
-        # more information about the header please refer to mrc format in Internet.
-        header_fmt = '10i6f3i3f2i100c3f4cifi800c'
-        header = struct.unpack(header_fmt, data[0:1024])
-        n_columns = header[0]
-        n_rows = header[1]
-        mode = header[3]
-        # print "n_columns:",n_columns
-        # print "n_rows:",n_rows
-        # print "mode:",mode
-        if mode == 0:
-            # signed 8-bit bytes range -128 to 127
-            pass
-        elif mode == 1:
-            # 16-bit halfwords
-            pass
-        elif mode == 2:
-            # 32-bit float
-            body_fmt = str(n_columns * n_rows) + "f"
-        elif mode == 3:
-            # complex 16-bit integers
-            pass
-        elif mode == 4:
-            # complex 32-bit reals
-            pass
-        elif mode == 6:
-            # unsigned 16-bit range 0 to 65535
-            pass
-        else:
-            print(
-                "ERROR:mode %s is not a valid value,should be [0|1|2|3|4|6]." % (fileName))
-            return None
-
-        body = list(struct.unpack(body_fmt, data[1024:]))
+        # f = open(fileName, "rb")
+        # data = f.read()  # read all data
+        # f.close()
+        #
+        # # more information about the header please refer to mrc format in Internet.
+        # header_fmt = '10i6f3i3f2i100c3f4cifi800c'
+        # header = struct.unpack(header_fmt, data[0:1024])
+        # n_columns = header[0]
+        # n_rows = header[1]
+        # mode = header[3]
+        # # print "n_columns:",n_columns
+        # # print "n_rows:",n_rows
+        # # print "mode:",mode
+        # if mode == 0:
+        #     # signed 8-bit bytes range -128 to 127
+        #     pass
+        # elif mode == 1:
+        #     # 16-bit halfwords
+        #     pass
+        # elif mode == 2:
+        #     # 32-bit float
+        #     body_fmt = str(n_columns * n_rows) + "f"
+        # elif mode == 3:
+        #     # complex 16-bit integers
+        #     pass
+        # elif mode == 4:
+        #     # complex 32-bit reals
+        #     pass
+        # elif mode == 6:
+        #     # unsigned 16-bit range 0 to 65535
+        #     pass
+        # else:
+        #     print(
+        #         "ERROR:mode %s is not a valid value,should be [0|1|2|3|4|6]." % (fileName))
+        #     return None
+        #
+        # body = list(struct.unpack(body_fmt, data[1024:]))
         return header, body
 
     # write numpy array to mrc file

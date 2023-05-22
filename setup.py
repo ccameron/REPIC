@@ -55,6 +55,15 @@ setup(
     url=URL,
     packages=find_packages(),
     include_package_data=True,
+    data_files=[
+        ("docs", ["docs/cryolo.md", "docs/deeppicker.md", "docs/topaz.md"]),
+        ("docs/patches/deeppicker", ["docs/patches/deeppicker/autoPick.py",
+                                     "docs/patches/deeppicker/autoPicker.py",
+                                     "docs/patches/deeppicker/dataLoader.py",
+                                     "docs/patches/deeppicker/deepModel.py",
+                                     "docs/patches/deeppicker/starReader.py",
+                                     "docs/patches/deeppicker/train.py"])
+    ],
     entry_points={
         "console_scripts": ["repic=repic.main:main"],
     },

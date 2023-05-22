@@ -3,7 +3,7 @@
 ## Installation
 DeepPicker installation is expected to take minutes. Note - REPIC must already be installed to allow for DeepPicker patching
 
-1. [Install Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links) if the conda command is unavailable
+1. [Install Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links) if the Conda command is unavailable
 2. Check installed/supported CUDA version with any one of the following commands:\
 ``` nvcc --version ```\
 or\
@@ -17,23 +17,21 @@ or\
 4. Activate REPIC Conda environment:\
 ``` conda activate repic ```
 5. Apply our patch to the DeepPicker codebase:\
-``` cp  $(pip show repic | grep -in "Location" | cut -f2 -d ' ')/docs/patches/deeppicker/*.py DeepPicker-python/ ```
+``` cp  $(pip show repic | grep -in "Location" | cut -f2 -d ' ')/../../../docs/patches/deeppicker/*.py DeepPicker-python/ ```
 6. Deactivate REPIC Conda environment:\
 ``` conda deactivate ```
 7. Remove pre-existing DeepPicker Conda environment:\
 ``` conda remove -n deep --all ```
 8. Create DeepPicker Conda environment:\
-``` conda create -n deep python=3.6 ```
+``` conda create -n deep -c conda-forge python=3.6 mamba ```
 9. Activate DeepPicker Conda environment:\
 ``` conda activate deep ```
-10. Install Mamba for faster package installations:\
-``` conda install -c conda-forge mamba ```
-11. Install TensorFlow with GPU support:\
-``` mamba install scipy matplotlib scikit-image tensorflow-gpu=2.1 cudatoolkit=10.1 ```\
+10. Install TensorFlow with GPU support:\
+``` mamba install scipy matplotlib scikit-image mrcfile tensorflow-gpu=2.1 cudatoolkit=10.1 ```\
 Make sure the ``` tensorflow-gpu ``` AND ``` cudatoolkit ``` are supported by the installed CUDA version.
-12. Install PyTorch CPU for faster image preprocessing:\
+11. Install PyTorch CPU for faster image preprocessing:\
 ``` mamba install pytorch torchvision -c pytorch ```
-13. Clean up install:\
+12. Clean up install:\
 ``` conda clean --all ```\
 ``` mamba clean --all ```
 

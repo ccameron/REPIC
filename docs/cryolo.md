@@ -3,7 +3,7 @@
 ##  Installation
 The SPHIRE-crYOLO installation is expected to take minutes:
 
-1. [Install Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links) if the conda command is unavailable
+1. [Install Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links) if the Conda command is unavailable
 2. Remove pre-existing SPHIRE-crYOLO Conda environment:\
 ``` conda remove -n cryolo  --all ```
 3. Check installed/supported CUDA version with any one of the following commands:\
