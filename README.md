@@ -13,32 +13,47 @@ REPIC expects particle sets to be in BOX file format (*.box) where each particle
 ## Software requirements
 Required:
 1. Python v3.8 interpreter ([Miniconda](https://docs.conda.io/en/latest/miniconda.html) installation recommended)
-2. [Gurobi ILP optimizer](https://www.gurobi.com/products/gurobi-optimizer/) (v9.5.2 used) - requires free [academic license](https://www.gurobi.com/downloads/)
-3. Python package dependencies described in [setup.py](setup.py)
-4. _Windows users_ - [Ubuntu terminal environment with Windows Subsystem for Linux (WSL)](https://ubuntu.com/tutorials/install-ubuntu-on-wsl2-on-windows-10#1-overview) (v22.04.2 LTS tested)
+2. Python package dependencies described in [setup.py](setup.py)
+3. _Windows users_ - [Ubuntu terminal environment with Windows Subsystem for Linux (WSL)](https://ubuntu.com/tutorials/install-ubuntu-on-wsl2-on-windows-10#1-overview) (v22.04.2 LTS tested)
 
 *Optional:* 
-1. [REgularised LIkelihood OptimisatioN (RELION)](https://relion.readthedocs.io/en/release-3.1/) - particle and density analyses (v3.13 used)
-2. [UCSF Chimera](https://www.cgl.ucsf.edu/chimera/) - map alignment and density visualization (v1.16 used)
+1. [Gurobi ILP optimizer](https://www.gurobi.com/products/gurobi-optimizer/) (v9.5.2 used) - requires free [academic license](https://www.gurobi.com/downloads/) **
+2. [REgularised LIkelihood OptimisatioN (RELION)](https://relion.readthedocs.io/en/release-3.1/) - particle and density analyses (v3.13 used)
+3. [UCSF Chimera](https://www.cgl.ucsf.edu/chimera/) - map alignment and density visualization (v1.16 used)
+
+** Required to reproduce manuscript results but if the Gurobi package is not found, REPIC will use the [SciPy ILP optimizer](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.milp.html)
 
 ## Installation guide
 REPIC installation is expected to only take a few minutes:
 
+**<details><summary>Install from source using pip (recommended)</summary><p>**
 1. Either download the package by clicking the "Clone or download" button, unziping file in desired location, and renaming the directory "REPIC" OR using the following command line:\
 ``` git clone https://github.com/ccameron/REPIC ```
 2. [Install Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links) if the ``` conda ``` command is unavailable
 3. ``` cd <install_path>/REPIC ```
 4. Create a separate Conda environment and install Gurobi for REPIC:\
-``` conda create -n repic -c gurobi python=3.8 gurobi```
-5. Activate REPIC Conda environmnet:\
+``` conda create -n repic -c gurobi python=3.8 gurobi ```
+5. Activate REPIC Conda environment:\
 ``` conda activate repic ```
 6. Install REPIC using [pip](https://en.wikipedia.org/wiki/Pip_(package_manager)):\
 ``` pip install . ```
 7. [Obtain Gurobi license](https://www.gurobi.com/academia/academic-program-and-licenses/) and set Gurobi key ``` grbgetkey <gurobi_key> ``` 
 8. Remove unused or temporary Conda files:\
 ``` conda clean --all ```
-
-To check if REPIC was correctly installed, run the following command:\
+</p></details>
+  
+**<details><summary>Install using Conda (in progress)</summary><p>**
+1. [Install Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links) if the ``` conda ``` command is unavailable
+2. Create a separate Conda environment and install REPIC and Gurobi:\
+``` conda create -n repic -c bioconda -c gurobi repic gurobi ```
+3. Activate REPIC Conda environment:\
+``` conda activate repic ```
+4. [Obtain Gurobi license](https://www.gurobi.com/academia/academic-program-and-licenses/) and set Gurobi key ``` grbgetkey <gurobi_key> ```
+5. Remove unused or temporary Conda files:\
+``` conda clean --all ```
+</p></details>
+  
+To check if REPIC was correctly installed, run the following command (after activating the REPIC Conda environment):\
 ``` repic -h ```\
 A help menu should appear in the terminal.
 

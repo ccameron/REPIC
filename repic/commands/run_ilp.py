@@ -1,13 +1,20 @@
 #!/usr/local/bin/python3
 #
-#	run_ilp.py -  run Gurobi ILP optimizer to identify best particle cliques
+#	run_ilp.py -  run ILP optimizer to identify best particle cliques
 #	author: Christopher JF Cameron
 #
 
-import gurobipy as gp
-
 from repic.utils.common import *
-from gurobipy import GRB
+
+#   determine ILP optimizer package to use
+use_gurobi = False
+try:
+    import gurobipy as gp
+    from gurobipy import GRB
+    use_gurobi = True
+except ImportError:
+    from scipy.optimize import LinearConstraint, Bounds, milp
+
 
 name = "run_ilp"
 
@@ -42,31 +49,56 @@ def main(args):
             w = pickle.load(f)
         del weight_file
 
-        ###
-        #	set up Gurobi optimizer - https://www.gurobi.com/documentation/9.5/examples/mip1_py.html#subsubsection:mip1.py
-        ###
+        if use_gurobi:
+            # set up Gurobi optimizer - https://www.gurobi.com/documentation/9.5/examples/mip1_py.html#subsubsection:mip1.py
 
-        #	define model object
-        model = gp.Model("model")
+            #	define model object
+            model = gp.Model("model")
 
-        #	set up constraint matrix
-        #	src: https://www.gurobi.com/documentation/9.5/refman/py_model_addmconstr.html
-        x = model.addMVar(A.shape[1], vtype=GRB.BINARY)
-        b = np.full(A.shape[0], 1)
-        model.addMConstr(A, x, '<', b)
+            #	set up constraint matrix
+            #	src: https://www.gurobi.com/documentation/9.5/refman/py_model_addmconstr.html
+            x = model.addMVar(A.shape[1], vtype=GRB.BINARY)
+            b = np.full(A.shape[0], 1)
+            model.addMConstr(A, x, '<', b)
 
-        #	set objective function
-        model.setObjective(gp.quicksum(
-            [x_i * w_i for x_i, w_i in zip(x, w)]), GRB.MAXIMIZE)
+            #	set objective function
+            model.setObjective(gp.quicksum(
+                [x_i * w_i for x_i, w_i in zip(x, w)]), GRB.MAXIMIZE)
 
-        #	optimize model
-        model.optimize()
+            #	optimize model
+            model.optimize()
+            x = np.array([val.x for val in model.getVars()])
+
+            del model, b, w
+        else:  # fall back on SciPy optimizer
+
+            #   SciPY only optimizes minimization problems
+            w *= -1
+
+            #   restrict clique selection to integers
+            integrality = np.ones_like(w)
+            #   binary selection of cliques
+            b_u = np.full(len(w), 1.5)  # '1.5' incase bounds are not inclusive
+            b_l = np.full(len(w), -0.5)
+            bounds = Bounds(lb=b_l, ub=b_u)
+
+            #	set up constraint matrix
+            b_u = np.full(A.shape[0], 1.5)
+            b_l = np.full_like(b_u, -np.inf)
+            constraint = LinearConstraint(A, b_l, b_u)
+
+            #   optimize model
+            res = milp(c=w, constraints=constraint,
+                       integrality=integrality, bounds=bounds,
+                       options={"disp": True})
+            assert(res.success == True), "Error - optimal solution could not be found"
+            x = res.x
+
+            del w, b_u, b_l, constraint, res
 
         #	check that each vertex is only chosen once
-        x = np.array([val.x for val in model.getVars()])
         assert(np.max(np.sum(A.toarray() * x, axis=1)) ==
                1), "Error - vertices are assigned to multiple cliques"
-        del model, b, w
 
         #	load clique coordinates
         in_file = matrix_file.replace(
@@ -86,7 +118,7 @@ def main(args):
             coords = coords[1:]
         #	filter coords and clique weights for chosen cliques
         cliques, confidences = zip(*[(coords[i], confidences[i])
-                                   for i in np.where(x == 1.)[0]])
+                                     for i in np.where(x == 1.)[0]])
         del x
 
         tmp = len(cliques)
