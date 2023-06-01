@@ -1,8 +1,10 @@
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/repic/badges/version.svg)](https://anaconda.org/bioconda/repic)
+
 # REPIC
 <ins>RE</ins>liable <ins>PI</ins>cking by <ins>C</ins>onsensus (REPIC)
 
 ## Overview
-REPIC is an ensemble learning approach to cryogenic-electron miscroscopy (cryo-EM) particle picking. It identifies particles common to multiple picked particle sets (i.e., consensus particles) using graph theory and integer linear programming (ILP). Picked particle sets may be found by a human specialist (manual), template matching, mathematical function (e.g., RELION's Laplacian-of-Gaussian auto-picking), or machine-learning method. A schematic representation of REPIC applied to the output of three CNN-based particle pickers is below:
+REPIC is an ensemble learning approach to cryogenic-electron microscopy (cryo-EM) particle picking. It identifies particles common to multiple picked particle sets (i.e., consensus particles) using graph theory and integer linear programming (ILP). Picked particle sets may be found by a human specialist (manual), template matching, mathematical function (e.g., RELION's Laplacian-of-Gaussian auto-picking), or machine-learning method. A schematic representation of REPIC applied to the output of three CNN-based particle pickers is below:
 
 <p align="center">
 <img width="60%" src="imgs/repic_overview.png">
@@ -25,8 +27,19 @@ Required:
 
 ## Installation guide
 REPIC installation is expected to only take a few minutes:
+  
+**<details><summary>Install using Conda (recommended)</summary><p>**
+1. [Install Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links) if the ``` conda ``` command is unavailable
+2. Create a separate Conda environment and install REPIC and Gurobi:\
+``` conda create -n repic -c bioconda -c gurobi repic gurobi ```
+3. Activate REPIC Conda environment:\
+``` conda activate repic ```
+4. [Obtain Gurobi license](https://www.gurobi.com/academia/academic-program-and-licenses/) and set Gurobi key ``` grbgetkey <gurobi_key> ```
+5. Remove unused or temporary Conda files:\
+``` conda clean --all ```
+</p></details>
 
-**<details><summary>Install from source using pip (recommended)</summary><p>**
+**<details><summary>Install from source using pip</summary><p>**
 1. Either download the package by clicking the "Clone or download" button, unziping file in desired location, and renaming the directory "REPIC" OR using the following command line:\
 ``` git clone https://github.com/ccameron/REPIC ```
 2. [Install Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links) if the ``` conda ``` command is unavailable
@@ -39,17 +52,6 @@ REPIC installation is expected to only take a few minutes:
 ``` pip install . ```
 7. [Obtain Gurobi license](https://www.gurobi.com/academia/academic-program-and-licenses/) and set Gurobi key ``` grbgetkey <gurobi_key> ``` 
 8. Remove unused or temporary Conda files:\
-``` conda clean --all ```
-</p></details>
-  
-**<details><summary>Install using Conda (in progress)</summary><p>**
-1. [Install Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links) if the ``` conda ``` command is unavailable
-2. Create a separate Conda environment and install REPIC and Gurobi:\
-``` conda create -n repic -c bioconda -c gurobi repic gurobi ```
-3. Activate REPIC Conda environment:\
-``` conda activate repic ```
-4. [Obtain Gurobi license](https://www.gurobi.com/academia/academic-program-and-licenses/) and set Gurobi key ``` grbgetkey <gurobi_key> ```
-5. Remove unused or temporary Conda files:\
 ``` conda clean --all ```
 </p></details>
   
