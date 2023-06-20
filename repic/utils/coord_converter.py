@@ -1,8 +1,9 @@
 #!/usr/local/bin/python3
 #
-#	coord_converter.py - convervets particle coordinates to different formats
-#	original author: Sebastian JH Seager
-#	modified by: Christopher JF Cameron
+# coord_converter.py
+# original author: Sebastian JH Seager
+# modified by: Christopher JF Cameron
+"""Converts particle detection box coordinates between different formats (STAR, BOX, dat, coord, etc.)"""
 
 import argparse
 import numpy as np
@@ -11,6 +12,7 @@ import os
 import re
 import sys
 
+from common import *
 from collections import namedtuple
 from pathlib import Path
 
@@ -18,13 +20,19 @@ from pathlib import Path
 
 
 Box = namedtuple("Box", ["x", "y", "w", "h", "conf"])
+"""named tuple for script output in BOX format"""
 # set defaults starting from rightmost arg (conf)
 Box.__new__.__defaults__ = (0,)
 STAR_COL_X = "_rlnCoordinateX"
+"""STAR file column name for x-coordinate of particle detection box"""
 STAR_COL_Y = "_rlnCoordinateY"
+"""STAR file column name for y-coordinate of particle detection box"""
 STAR_COL_C = "_rlnAutopickFigureOfMerit"
+"""STAR file column name for figure of merit"""
 STAR_COL_N = "_rlnMicrographName"
+"""STAR file column name for micrograph name"""
 DF_COL_NAMES = ["x", "y", "w", "h", "conf", "name"]
+"""default column names for Pandas data frame"""
 STAR_HEADER_MAP = {
     "x": STAR_COL_X,
     "y": STAR_COL_Y,
@@ -33,10 +41,14 @@ STAR_HEADER_MAP = {
     "conf": STAR_COL_C,
     "name": STAR_COL_N,
 }
+"""dictionary of header mappings for STAR file"""
 BOX_HEADER_MAP = {"x": 0, "y": 1, "w": 2, "h": 3, "conf": 4, "name": None}
+"""dictionary of header mappings for BOX file"""
 CBOX_HEADER_MAP = {"x": 0, "y": 1, "w": 3, "h": 4, "conf": 8, "name": None}
+"""dictionary of header mappings for cBOX file"""
 TSV_HEADER_MAP = {"x": 0, "y": 1, "w": None,
                   "h": None, "conf": 2, "name": None}
+"""dictionary of header mappings for TSV file"""
 CS_HEADER_MAP = {
     "mrc_dims": 9,
     "x": 10,
@@ -46,18 +58,31 @@ CS_HEADER_MAP = {
     "conf": None,
     "name": 8,
 }
+"""dictionary of header mappings for CryoSparc file"""
 
 AUTO = "auto"
+"""flag for automatically processing columns of certain file types"""
 
 
 # utils
 
 
 def _log(msg, lvl=0, quiet=False):
-    """Format and print message to console with one of the following logging levels:
-    0: info (print and continue execution; ignore if quiet=True)
-    1: warning (print and continue execution)
+    """
+    Formats and prints message to console with one of the following logging levels:
+    0: info (print and continue execution; ignore if quiet=True),
+    1: warning (print and continue execution),
     2: error (print and exit with code 1)
+
+    Args:
+        msg (str): message text
+
+    Keyword Args:
+        lvl (int, default=0): logging level
+        quiet (bool, default=False): suppress log printing
+
+    Returns:
+        None
     """
 
     if lvl == 0 and quiet:
@@ -76,40 +101,77 @@ def _log(msg, lvl=0, quiet=False):
         sys.exit(1)
 
 
-def _is_int(x):
+def _is_int(val):
+    """
+    Checks if Python object can be converted to int datatype
+
+    Args:
+        val (obj): Python object
+
+    Returns:
+        bool: True if string can be converted (False otherwise)
+    """
     try:
-        int(x)
+        int(val)
     except ValueError:
         return False
+
     return True
 
 
-def _is_float(num):  # CJC change
-    try:
-        float(num)
-        return True
-    except ValueError:
-        return False
-
-
 def _row_is_all_nonnumeric(x):  # CJC change
-    return all([not _is_float(val) for val in x.dropna()])
+    """
+    Checks if all elements of Pandas dataframe row are numeric values
+
+    Args:
+        x (obj): Pandas dataframe row object
+
+    Returns:
+        bool: True if all elements are numeric values (False otherwise)
+    """
+    return all([not is_float(val) for val in x.dropna()])
 
 
 def _has_numbers(s):
-    """Returns True if string s contains any number, otherwise False."""
+    """
+    Checks if string s contains an integer
+
+    Args:
+        s (str): string
+
+    Returns:
+        bool: True if string contains integer (False otherwise)
+    """
 
     res = re.search("[0-9]", str(s)) is not None
     return res
 
 
 def _make_parent_dir(path_str):
+    """
+    Creates parent directory if it does not exist
+
+    Args:
+        path_str (str): filepath to subdirectory
+
+    Returns:
+        None
+    """
     par_dir = Path(path_str).parent.resolve()
     if not par_dir.is_dir():
         par_dir.mkdir(parents=True, exist_ok=True)
 
 
 def _path_occupied(path_str):
+    """
+    Checks if file path is a file
+
+    Args:
+        path_str (str): filepath
+
+    Returns:
+        bool: True if filepath is a file (False otherwise)
+    """
     return Path(path_str).resolve().is_file()
 
 
@@ -117,9 +179,15 @@ def _path_occupied(path_str):
 
 
 def cs_to_df(path):
-    """Convert a CryoSparc coordinate file into a DataFrame with correct column
-    headers."""
+    """
+    Converts particle detection box coordinate file (in CryoSparc format) into a Pandas dataframe with the correct column headers
 
+    Args:
+        path (str): filepath to particle detection box file
+
+    Returns:
+        obj: Pandas dataframe of particle detection box coordinates
+    """
     try:
         data = np.load(path, allow_pickle=True)
     except ValueError:
@@ -150,10 +218,15 @@ def cs_to_df(path):
 
 
 def star_to_df(path):
-    """Convert any well formatted STAR file into a DataFrame with correct column
-    headers.
     """
+    Converts particle detection box coordinate file (in STAR file format) into a Pandas dataframe with the correct column headers
 
+    Args:
+        path (str): filepath to particle detection box file
+
+    Returns:
+        obj: Pandas dataframe of particle detection box coordinates
+    """
     header = {}
     header_line_count = 0  # file line index where data starts
 
@@ -198,15 +271,17 @@ def star_to_df(path):
 
 
 def tsv_to_df(path, header_mode=None):
-    """Generate a dataframe from the TSV-like file at the specified path, skipping
-    any non-numeric header rows.
+    """
+    Converts particle detection box coordinate file (in TSV-like file format) into a Pandas dataframe, skipping any non-numeric header rows
 
     Args:
-        path (str): Path to TSV-like file
-        header_mode (str): One of None, "infer" or an int (row index). If None, any
-            non-numeric rows at the top of the file are skipped and column names
-            are not set. Otherwise, manual column skipping is not performed, and
-            header_mode is passed directly to the header argument of pandas.read_csv.
+        path (str): filepath to particle detection box file
+
+    Keyword Args:
+        header_mode (int, str, or None): One of None, "infer" or an int (row index). If None, any non-numeric rows at the top of the file are skipped and column names are not set. Otherwise, manual column skipping is not performed, and header_mode is passed directly to the header argument of pandas.read_csv
+
+    Returns:
+        obj: Pandas dataframe of particle detection box coordinates
     """
 
     if header_mode is None:
@@ -244,8 +319,18 @@ def tsv_to_df(path, header_mode=None):
 
 
 def df_to_star(df, out_path, force=False):
-    """Write df generated from one of the *_to_df methods in this module out to file
-    with appropriate STAR header prepended.
+    """
+    Writes Panda dataframe of particle detection box coordinates (generated from one of the *_to_df methods) to storage in STAR file format
+
+    Args:
+        df (object): Pandas dataframe of particle detection box coordinates
+        out_path (str): filepath to output file
+
+    Keyword Args:
+        force (bool, default=False): overwrite output file if it exists
+
+    Returns:
+        None
     """
 
     if force:
@@ -272,10 +357,21 @@ def df_to_star(df, out_path, force=False):
 
 
 def df_to_tsv(df, col_order, out_path, include_header=False, force=False):
-    """Write df generated from one of the *_to_df methods in this module out to file,
-    optionally writing out [x, y, w, h, conf] labels as a header.
     """
+    Writes Panda dataframe of particle detection box coordinates (generated from one of the *_to_df methods) to storage, optionally writing out [x, y, w, h, conf] labels as a header
 
+    Args:
+        df (object): Pandas dataframe of particle detection box coordinates
+        col_order (list): list of ordered file columns
+        out_path (str): filepath to output file
+
+    Keyword Args:
+        include_header (bool, default=False): include header in output file
+        force (bool, default=False): overwrite output file if it exists
+
+    Returns:
+        None
+    """
     if force:
         _make_parent_dir(out_path)
     else:
@@ -307,7 +403,32 @@ def process_conversion(
     force=False,
     quiet=False,
 ):
+    """
+    Converts between different particle detection box formats
 
+    Args:
+        paths (list): filepaths of particle detection box coordinate files
+        in_fmt (str): input file format
+        out_fmt (str): output file format
+
+    Keyword Args:
+        boxsize (int or None): particle detection box height/width
+        out_dir (str or None): filepath to output file
+        in_cols (tuple): tuple of column determination (default=auto)
+        out_col_order (tuple): output column order
+        suffix (str): additional suffix for output files (default='')
+        include_header (bool, default=False): include header in output file
+        single_out (bool, default=False): output particle detection box coordinates in a single file
+        multi_out (bool, default=False): output particle detection box coordinates in multiple files (one per micrograph)
+        round_to (int or None): round coordinates to the specified number of decimal places
+        norm_conf (list or None): list of min and max confidence values to be used to normalize observed confidence scores
+        require_conf (float or None): model confidence score to assign to particle detection boxes without a score
+        force (bool, default=False): overwrite output file if it exists
+        quiet (bool, default=False): suppress log printing
+
+    Returns:
+        None
+    """
     # set default columns as needed
     cols = {}
     for i, col in enumerate(DF_COL_NAMES):
@@ -476,6 +597,7 @@ if __name__ == "__main__":
         "parameters define the conversion. The -c argument can be used if more "
         "granular control over column indices is required."
     )
+    """ obj: argparse parse_args() object"""
     parser.add_argument(
         "input", help="Path(s) to input particle coordinates", nargs="+"
     )

@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+#
+#	main.py
+#	author: Christopher JF Cameron
+#
+"""Entry point for Conda and pip installation of REPIC"""
 
 import argparse
 import repic
@@ -9,7 +14,7 @@ import repic.commands.iter_pick
 
 
 def main():
-
+    """Initializes argparse argumentParser() and subparser objects"""
     parser = argparse.ArgumentParser()
     parser.add_argument("--version", action="version",
                         version=f"REPIC {repic.__version__}")

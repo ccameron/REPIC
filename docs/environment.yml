@@ -1,0 +1,15 @@
+name: repic
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - repic
+  - pandoc
+  - sphinx==6.2.1
+  - sphinx_rtd_theme
+  - sphinx-autoapi
+  - pip:
+      - readthedocs-sphinx-search
+prefix: /Users/ccameron/miniconda3/envs/repic

@@ -1,20 +1,23 @@
 #!/usr/local/bin/python3
 #
-#	iter_config.py -  sets general iterative ensemble particle picking parameters
+#	iter_config.py
 #	author: Christopher JF Cameron
 #
+"""
+    Creates config file (JSON format) of the general iterative ensemble particle picking parameters
+"""
 
 import copy
 from repic.utils.common import *
 
 name = "iter_config"
-#   default Conda enviroment names for SPHIRE-crYOLO, DeepPicker, and Topaz
+"""str: module name (used by argparse subparser)"""
 env_dict = {
     "cryolo": "cryolo",
     "deep": "deep",
     "topaz": "topaz"
 }
-#   expected DeepPicker files
+"""dict: dictionary of default Conda enviroment names for SPHIRE-crYOLO, DeepPicker, and Topaz"""
 exp_deep_files = set([
     "analysis_pick_results.py",
     "autoPicker.py",
@@ -31,9 +34,19 @@ exp_deep_files = set([
     os.path.join("trained_model", "model_demo_type3"),
     os.path.join("trained_model", "model_demo_type3.meta")
 ])
+"""set: set of expected DeepPicker files (check for proper installation)"""
 
 
 def add_arguments(parser):
+    """
+    Adds argparse command line arguments for iter_config.py
+
+    Args:
+        parser (object): argparse parse_args() object
+
+    Returns:
+        None
+    """
     parser.add_argument(
         "data_dir", help="path to directory containing training data")
     parser.add_argument("box_size", type=int,
@@ -48,17 +61,22 @@ def add_arguments(parser):
     parser.add_argument("topaz_rad", type=int,
                         help="Topaz particle radius size (in int[pixels])")
     parser.add_argument("--cryolo_env", type=str, default=env_dict['cryolo'],
-                        help=f"Conda environment name for SPHIRE-crYOLO installation (default:{env_dict['cryolo']})")
+                        help=f"Conda environment name or prefix for SPHIRE-crYOLO installation (default:{env_dict['cryolo']})")
     parser.add_argument("--deep_env", type=str, default=env_dict['deep'],
-                        help=f"Conda environment name for DeepPicker installation (default:{env_dict['deep']})")
+                        help=f"Conda environment name or prefix for DeepPicker installation (default:{env_dict['deep']})")
     parser.add_argument("--topaz_env", type=str, default=env_dict['topaz'],
-                        help=f"Conda environment name for Topaz installation (default:{env_dict['topaz']})")
+                        help=f"Conda environment name or prefix for Topaz installation (default:{env_dict['topaz']})")
     parser.add_argument("--out_file_path", type=str, default="iter_config.json",
                         help="path for created config file (default:./iter_config.json)")
 
 
 def main(args):
+    """
+    Creates config file of general iterative ensemble particle picking parameters
 
+    Args:
+        args (obj): argparse command line argument object
+    """
     print("Validating config parameters")
     #	check that the training data directory and SPHIRE-crYOLO model exist
     assert(os.path.exists(args.data_dir)
@@ -103,6 +121,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    """ obj: argparse parse_args() object"""
     add_arguments(parser)
     args = parser.parse_args()
     main(args)

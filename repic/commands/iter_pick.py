@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
 #
-#	iter_pick.py - Python wrapper script for repic/iterative_particle_picking/run.sh
+#	iter_pick.py
 #	author: Christopher JF Cameron
 #
-
+"""Python wrapper script for repic/iterative_particle_picking/run.sh"""
 import pathlib
 from repic.utils.common import *
 
 name = "iter_pick"
-
+"""str: module name (used by argparse subparser)"""
 
 def add_arguments(parser):
-    """adds parser arguments for script"""
+    """
+    Adds argparse command line arguments for iter_pick.py
+
+    Args:
+        parser (object): argparse parse_args() object
+
+    Returns:
+        None
+    """
     parser.add_argument("config_file", type=str,
                         help="path to REPIC config file")
     parser.add_argument("num_iter", type=int,
@@ -27,7 +35,12 @@ def add_arguments(parser):
 
 
 def main(args):
+    """
+    Loads config file (output of iter_config.py) and runs repic/iterative_particle_picking/run.sh with loaded parameters
 
+    Args:
+        args (obj): argparse command line argument object
+    """
     #   load JSON config file
     with open(args.config_file, 'rt') as f:
         params_dict = json.load(f)
@@ -58,7 +71,7 @@ def main(args):
     ]
 
     #   run iterative ensemble particle picking
-    out_file = os.path.join(params_dict["data_dir"], "iter_pick.log") if args.out_file_path is None else args.out_file_path 
+    out_file = os.path.join(params_dict["data_dir"], "iter_pick.log") if args.out_file_path is None else args.out_file_path
     print(f"""Note - stderr and stdout are being written to: {out_file}
 Please review this file for iterative ensemble particle picking progress""")
     with open(out_file, 'wt') as o:
@@ -68,6 +81,7 @@ Please review this file for iterative ensemble particle picking progress""")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    """ obj: argparse parse_args() object"""
     add_arguments(parser)
     args = parser.parse_args()
     main(args)

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 #
-#	common.py - contains common Python functions and libraries shared across scripts
-#	author: Christopher JF Cameron
+# common.py
+# author: Christopher JF Cameron
 #
+"""Common functions and libraries shared across REPIC scripts"""
 
 from shutil import rmtree
 from pathlib import Path
@@ -21,10 +22,24 @@ plt.switch_backend('agg')
 
 
 box_id = 0
+"""int: NetworkX initial node (particle detection box) ID"""
 
 
 def adjust_plot_attributes(ax, xlabel, ylabel, fontsize=32):
-    """adjust common matplotlib plot parameters"""
+    """
+    Adjusts general Matplotlib plot parameters
+
+    Args:
+        ax (obj): Matplotlib axis object
+        xlabel (str): x-axis label
+        ylabel (str): y-axis label
+
+    Keyword Args:
+        fontsize (int, default=32): font size of plot text
+
+    Returns:
+        None
+    """
     for axis in ["bottom", "left"]:
 
         ax.spines[axis].set_visible(True)
@@ -41,8 +56,16 @@ def adjust_plot_attributes(ax, xlabel, ylabel, fontsize=32):
     ax.grid(color="gray", ls=':', lw=0.5, zorder=-1.)
 
 
-def check_float(val):
-    """return True if string can be converted to a float"""
+def is_float(val):
+    """
+    Checks if Python object can be converted to float datatype
+
+    Args:
+        val (obj): Python object
+
+    Returns:
+        bool: True if string can be converted (False otherwise)
+    """
     try:
         float(val)
     except ValueError:
@@ -52,14 +75,30 @@ def check_float(val):
 
 
 def create_dir(dir_path):
-    """creates directory at provided location"""
+    """
+    Creates directory at provided location
+
+    Args:
+        dir_path (str): file path to directory
+
+    Returns:
+        str: file path to directory
+    """
     Path(dir_path).mkdir(parents=True, exist_ok=True)
 
     return dir_path
 
 
 def del_dir(dir_path):
-    """deletes directory if it exists"""
+    """
+    Deletes directory if it exists
+
+    Args:
+        dir_path (str): file path to directory
+
+    Returns:
+        str: file path to directory
+    """
     directory = Path(dir_path)
     if directory.exists() and directory.is_dir():
         rmtree(directory)
@@ -69,31 +108,43 @@ def del_dir(dir_path):
 
 
 def get_box_coords(pattern, size=None, return_weights=False):
-    """parsed particle coordinates file in BOX format and returns coordinates"""
-    #	BOX format description: https://blake.bcm.edu/emanwiki/Eman2OtherFiles
+    """
+    Parses particle detection box file (BOX format) and returns particle detection box coordinates
+
+    Args:
+        pattern (str):
+
+    Keyword Args:
+        size (int or None): restrict the number of coordinates returned to this value
+        return_weight (bool, default=False): flag to include particle detection box score or confidence in return
+
+    Returns:
+        list: list of particle detection box coordinates
+    """
+    # BOX format description: https://blake.bcm.edu/emanwiki/Eman2OtherFiles
     global box_id
     # try:
     for i, (in_file) in enumerate(glob.glob(pattern)):
         with open(in_file, 'rt') as f:
-            #	check for header
-            if check_float(f.readline().rstrip().split()[0]):
+            # check for header
+            if is_float(f.readline().rstrip().split()[0]):
                 f.seek(0)
             X, Y, H, W, weights = zip(*[val.strip().split() for val in f])
-    assert(i == 0), ' '.join(["Error - multiple BOX files found using pattern:",
-                             pattern])
+    assert (i == 0), ' '.join(["Error - multiple BOX files found using pattern:",
+                               pattern])
     # except UnboundLocalError:
     #     print("Error - no BOX files found at:", pattern)
     #     sys.exit(-2)
-    #	check_float() handles header if present
-    X = [float(x) for x in X if check_float(x)]
-    Y = [float(y) for y in Y if check_float(y)]
+    # is_float() handles header if present
+    X = [float(x) for x in X if is_float(x)]
+    Y = [float(y) for y in Y if is_float(y)]
     weights = [float(val) for val in weights]
-    #	check that weights are probabilities (clique weights will be > 0)
+    # check that weights are probabilities (clique weights will be > 0)
     if np.min(weights) < 0:
-        #	convert log-likelihood to probability
+        # convert log-likelihood to probability
         weights = [1. / (1. + np.exp(-1. * val)) for val in weights]
 
-    assert(len(X) == len(Y)), "Error - unequal number of 'x' and 'y' elements"
+    assert (len(X) == len(Y)), "Error - unequal number of 'x' and 'y' elements"
 
     if not size is None:
         X = X[:size]
@@ -103,7 +154,7 @@ def get_box_coords(pattern, size=None, return_weights=False):
         except UnboundLocalError:
             pass  # weights not defined
 
-    #	add unique box ID - required for optimal network X clique finding
+    # add unique box ID - required for optimal network X clique finding
     if return_weights:
         coords = [(x, y, weight, i) for i, (x, y, weight)
                   in enumerate(zip(X, Y, weights), box_id)]
@@ -114,19 +165,39 @@ def get_box_coords(pattern, size=None, return_weights=False):
     return coords
 
 
-def get_box_vertex_entry(coord, length, index):
-    """returns vertex entry of coordinate (X,Y)"""
-    entry = [None] * length
+def get_box_vertex_entry(coord, clique_size, index):
+    """
+    Returns particle detection box coordinates of clique as a vector
+
+    Args:
+        coord (list): particle detection box coordinates
+        clique_size (int): size of clique
+        index (int): position of particle detection box in clique (determined by order of particle picking algorithms)
+
+    Returns:
+        list: particle detection box coordinates formatted for multi-box output
+
+    """
+    entry = [None] * clique_size
     entry[index] = coord
 
     return entry
 
 
-def get_multi_in_coords(in_file, return_weights=False):
-    """returns coordinates, labels, and weights for mult_in BOX file"""
+def get_multi_in_coords(in_file):
+    """
+    Parses a particle detection box file that contains multiple boxes per line (optimal cliques) and returns their coordinates, labels, and weights
+
+    Args:
+        in_file (str): filepath to particle detection box file
+
+    Returns:
+        list, list, list: lists of particle detection box coordinates, labels, and weights
+
+    """
     coords, weights = [], []
     with open(in_file, 'rt') as f:
-        #	process header
+        # process header
         labels = f.readline().strip().split()
         n = len(labels)  # number of boxes per line
         for line in f:
@@ -139,6 +210,15 @@ def get_multi_in_coords(in_file, return_weights=False):
 
 
 def write_pickle(data, out_file):
-    """writes data to storage in Pickle format"""
+    """
+    Writes provided data to storage in Pickle format
+
+    Args:
+        data (obj): NumPy array object
+        out_file (str): filepath for output file
+
+    Returns:
+        None
+    """
     with open(out_file, 'wb') as o:
         pickle.dump(data, o, protocol=pickle.HIGHEST_PROTOCOL)
