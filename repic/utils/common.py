@@ -107,7 +107,7 @@ def del_dir(dir_path):
     return dir_path
 
 
-def get_box_coords(pattern, size=None, return_weights=False):
+def get_box_coords(pattern, key=1., size=None, return_weights=False):
     """
     Parses particle detection box file (BOX format) and returns particle detection box coordinates
 
@@ -115,6 +115,7 @@ def get_box_coords(pattern, size=None, return_weights=False):
         pattern (str):
 
     Keyword Args:
+        key (float, default=1.): method key for k-d tree building
         size (int or None): restrict the number of coordinates returned to this value
         return_weight (bool, default=False): flag to include particle detection box score or confidence in return
 
@@ -123,7 +124,7 @@ def get_box_coords(pattern, size=None, return_weights=False):
     """
     # BOX format description: https://blake.bcm.edu/emanwiki/Eman2OtherFiles
     global box_id
-    # try:
+
     for i, (in_file) in enumerate(glob.glob(pattern)):
         with open(in_file, 'rt') as f:
             # check for header
@@ -132,23 +133,26 @@ def get_box_coords(pattern, size=None, return_weights=False):
             X, Y, H, W, weights = zip(*[val.strip().split() for val in f])
     assert (i == 0), ' '.join(["Error - multiple BOX files found using pattern:",
                                pattern])
-    # except UnboundLocalError:
-    #     print("Error - no BOX files found at:", pattern)
-    #     sys.exit(-2)
+
     # is_float() handles header if present
     X = [float(x) for x in X if is_float(x)]
     Y = [float(y) for y in Y if is_float(y)]
+    Z = [1.] * len(X)
+    keys = [key] * len(X)
     weights = [float(val) for val in weights]
     # check that weights are probabilities (clique weights will be > 0)
-    if np.min(weights) < 0:
+    if np.min(weights) < 0. or np.max(weights) > 1.:
         # convert log-likelihood to probability
         weights = [1. / (1. + np.exp(-1. * val)) for val in weights]
 
-    assert (len(X) == len(Y)), "Error - unequal number of 'x' and 'y' elements"
+    assert (len(X) == len(Y) == len(
+        Z)), "Error - unequal number of 'x', 'y', and 'z' elements"
 
     if not size is None:
         X = X[:size]
         Y = Y[:size]
+        Z = Z[:size]
+        keys = keys[:size]
         try:
             weights = weights[:size]
         except UnboundLocalError:
@@ -156,10 +160,11 @@ def get_box_coords(pattern, size=None, return_weights=False):
 
     # add unique box ID - required for optimal network X clique finding
     if return_weights:
-        coords = [(x, y, weight, i) for i, (x, y, weight)
-                  in enumerate(zip(X, Y, weights), box_id)]
+        coords = [(x, y, z, key, weight, i) for i, (x, y, z, key, weight)
+                  in enumerate(zip(X, Y, Z, keys, weights), box_id)]
     else:
-        coords = [(x, y, i) for i, (x, y) in enumerate(zip(X, Y), box_id)]
+        coords = [(x, y, z, key, i)
+                  for i, (x, y, z) in enumerate(zip(X, Y, Z, keys), box_id)]
     box_id = coords[-1][-1] + 1
 
     return coords
@@ -167,7 +172,7 @@ def get_box_coords(pattern, size=None, return_weights=False):
 
 def get_box_vertex_entry(coord, clique_size, index):
     """
-    Returns particle detection box coordinates of clique as a vector
+    Returns particle detection box coordinates of a clique as a vector
 
     Args:
         coord (list): particle detection box coordinates
@@ -193,7 +198,6 @@ def get_multi_in_coords(in_file):
 
     Returns:
         list, list, list: lists of particle detection box coordinates, labels, and weights
-
     """
     coords, weights = [], []
     with open(in_file, 'rt') as f:

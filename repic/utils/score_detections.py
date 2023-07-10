@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 #
 # score_detections.py
 # original author: Sebastian JH Seager

@@ -1,6 +1,8 @@
 # DeepPicker
 
 ## Installation
+DeepPicker was released as open source software (source: [paper abstract](https://doi.org/10.1016/j.jsb.2016.07.006)). However, the DeepPicker GitHub repo does not contain a license file. We have obtained permission from authors to include DeepPicker with REPIC installs: [imgs/deeppicker_approval.png](../main/imgs/deeppicker_approval.png) 
+
 DeepPicker installation is expected to take minutes. Note - REPIC must already be installed to allow for DeepPicker patching
 
 1. [Install Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links) if the Conda command is unavailable
@@ -35,13 +37,13 @@ Make sure the ``` tensorflow-gpu ``` AND ``` cudatoolkit ``` are supported by th
 ``` conda clean --all ```\
 ``` mamba clean --all ```
 
-**Note 1** - the original DeepPicker implementation was found to be too slow for analysis. We provide a path to the original software during installation step 3 and REPIC patches in step 5\
+**Note 1** - the original DeepPicker implementation was found to be too slow for our analysis. We provide a path to the original software during installation step 3 and REPIC patches in step 5\
 **Note 2** - see here for more information about CUDA compatibility with TensorFlow: [https://www.tensorflow.org/install/source#gpu](https://www.tensorflow.org/install/source#gpu)
 
 More information about running and installing DeepPicker can be found [here](https://github.com/nejyeah/DeepPicker-python).
 
 ## REPIC reproducibility
-The DeepPicker GitHub repo as of the latest commit on May 20th 2017 (commit hash [3f46c8b](https://github.com/nejyeah/DeepPicker-python/tree/3f46c8b0ffe2dbaa837fd9399b4a542588e991e6)) was installed.
+The DeepPicker GitHub repo as of the latest commit on May 20th 2017 (commit hash [3f46c8b](https://github.com/nejyeah/DeepPicker-python/tree/3f46c8b0ffe2dbaa837fd9399b4a542588e991e6)) was installed. A fork of the DeepPicker GitHub repo for posterity can be found here: [https://github.com/ccameron/DeepPicker-REPIC](https://github.com/ccameron/DeepPicker-REPIC)
 
 DeepPicker models were trained using ``` train_type 1 ```. All other ``` train_type ``` options were NOT tested. Please contact DeepPicker authors regarding these options.
 

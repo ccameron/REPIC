@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
-#   build_subsets.py
-#   Author: Christopher JF Cameron
+# build_subsets.py
+# Author: Christopher JF Cameron
 #
 """
     Creates cross-validation subsets for iterative ensemble particle picking

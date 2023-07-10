@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 #
 # get_cliques.py
 # author: Christopher JF Cameron
@@ -12,6 +12,7 @@ import networkx as nx
 
 from repic.utils.common import *
 from scipy.sparse import coo_matrix
+from scipy.spatial import KDTree
 
 name = "get_cliques"
 """str: module name (used by argparse subparser)"""
@@ -39,7 +40,7 @@ def add_arguments(parser):
                         help="filters cliques for those in the largest Connected Component (CC)")
 
 
-def add_nodes_to_graph(graph, node_pairs, node_names):
+def add_nodes_to_graph(graph, node_pairs, node_names, k=3):
     """
     Adds vertices and edges to the graph
 
@@ -48,14 +49,20 @@ def add_nodes_to_graph(graph, node_pairs, node_names):
         node_pairs (list): list of paired vertex (particle detection box) coordinates and their edge weight
         node_names (list): list of node (particle picking algorithm) names
 
+    Keyword Args:
+        k (int, default=3):  number of methods
+
     Returns:
         None
-
     """
     global node_id
-    for x, y, weight_1, id_1, a, b, weight_2, id_2, jaccard in node_pairs:
-        graph.add_node((x, y, id_1), name=node_names[0], weight=weight_1)
-        graph.add_node((a, b, id_2), name=node_names[1], weight=weight_2)
+    for x, y, key_1, weight_1, id_1, a, b, key_2, weight_2, id_2, jaccard in node_pairs:
+        graph.add_node((x, y, id_1),
+                       name=node_names[int(np.rint(key_1 * k))],
+                       weight=weight_1)
+        graph.add_node((a, b, id_2),
+                       name=node_names[int(np.rint(key_2 * k))],
+                       weight=weight_2)
         graph.add_edge((x, y, id_1), (a, b, id_2),
                        weight=jaccard)  # weight attribute used by nx
 
@@ -100,33 +107,9 @@ def find_cliques(graph, k):
     return cliques
 
 
-def get_jaccard(set_a, set_b, box_size, threshold):
-    """
-    Calculates Jaccard Index (JI) between two sets of particle detection boxes and returns set of paired boxes with JI greater than the given threshold
-
-    Args:
-        set_a (set): set of particle detection boxes A
-        set_b (set): set of particle detection boxes B
-        box_size (int): particle detection box height/width
-        threshold (float): Jaccard Index threshold
-
-    Returns:
-        list: list of paired vertex (particle detection box) coordinates and their edge weight (JI)
-    """
-    vals = []
-    for x, y, weight_1, id_1 in set_a:
-        for a, b, weight_2, id_2 in set_b:
-            if ((np.abs(x - a) <= box_size) and
-                    ((jaccard := calc_jaccard(x, y, a, b, box_size)) > threshold)):
-                vals.append(
-                    tuple([x, y, weight_1, id_1, a, b, weight_2, id_2, jaccard]))
-
-    return vals
-
-
 def main(args):
     """
-    Builds NetworkX graph from multiple picked particle sets and finds all k-sized cliques
+    Builds NetworkX graph from file set and finds all k-sized cliques
 
     Args:
         args (obj): argparse command line argument object
@@ -167,21 +150,27 @@ def main(args):
     print(f"Using {start_method} BOX files as starting point")
 
     # iterate over crYOLO files and parse matching DeepPicker & Topaz files
-    for i, box_file in enumerate(glob.glob(os.path.join(args.in_dir, methods[0], "*.box"))):
+    k = len(methods)  # number of methods/clique size
+    for in_file in glob.glob(os.path.join(args.in_dir, methods[0], "*.box")):
 
         start = time.time()
         # dertemine basename of particle file
-        basename = os.path.basename(box_file).replace(".box", '')
+        basename = os.path.basename(in_file).replace(".box", '')
         print(f"\n--- {basename} ---\n")
         basename = f"*{basename}*"
 
         print("Loading particle coordinates into memory ... ")
         try:
             # get coords for each provided picker
-            coords = [get_box_coords(box_file, return_weights=True)]
-            for method in methods[1:]:
-                coords.append(get_box_coords(os.path.join(args.in_dir, method, basename),
-                                             return_weights=True))
+            # key = i/k for method i of k methods
+            coords = np.array(get_box_coords(
+                in_file, key=0., return_weights=True))
+            for i, method in enumerate(methods[1:], 1):
+                coords = np.concatenate((coords,
+                                         np.asarray(get_box_coords(os.path.join(args.in_dir, method, basename),
+                                                                   key=i / float(k),
+                                                                   return_weights=True))))
+            del i, method
         except (UnboundLocalError, IndexError) as e:
             # create empty BOX file if particles are not picked by all methods
             print("Skipping micrograph - not all methods have picked particles...")
@@ -189,20 +178,32 @@ def main(args):
                 [basename[1:-1], ".box"]))
             with open(out_file, 'wt') as o:
                 pass
-            continue
+            return
 
         print("Calculating Jaccard indices ... ")
+        #   build k-d tree from x, y, and z coordinates with method key values
+        kd_tree = KDTree(coords[:, :4])
+
+        #   get pairs of particle detection boxes within distance threshold r
+        #   k-d tree uses Minkowski distance (default p == 2 is Euclidean distance)
+        r = args.box_size + 1.  # +1 for key column
+        pairs = kd_tree.query_pairs(r)
         # calculate Jaccard indices between pairs
-        label_pairs, jaccards = [], []
-        for (j, k) in itertools.combinations(list(range(len(coords))), 2):
-            label_pairs.append((methods[j], methods[k]))
-            jaccards.append(get_jaccard(
-                coords[j], coords[k], args.box_size, 0.3))
+        data = []
+        for i, j in pairs:
+            x, y, z, key_1, weight_1, id_1 = coords[i]
+            a, b, c, key_2, weight_2, id_2 = coords[j]
+            if (not key_1 == key_2) and ((jaccard := calc_jaccard(x, y, a, b, args.box_size)) > 0.3):
+                data.append(
+                    tuple([x, y, key_1, weight_1, id_1, a, b, key_2, weight_2, id_2, jaccard]))
+        del coords, kd_tree, x, y, z, key_1, weight_1, id_1, a, b, c, key_2, weight_2, id_2, jaccard
 
         print("Building graph ... ")
         # build graph weighted pairs
         graph = nx.Graph()
-        [add_nodes_to_graph(graph, vals, methods) for vals in jaccards]
+        # [add_nodes_to_graph(graph, vals, methods) for vals in data]
+        add_nodes_to_graph(graph, data, methods, k=k)
+        del data
 
         # list connected component stats
         components = [len(val) for val in nx.connected_components(graph)]
@@ -213,18 +214,16 @@ def main(args):
         if args.get_cc:
             # replace graph of all particle detections with largest CC
             for cc in sorted(nx.connected_components(graph), key=len, reverse=True):
-                # if len(cc) == 12:
                 graph = graph.subgraph(cc)
                 break
 
         print("Finding cliques ... ")
         # find cliques
-        clique_size = len(coords)
-        all_cliques = find_cliques(graph, clique_size)
+        all_cliques = find_cliques(graph, k)
         n = len(all_cliques)
         # sorted list of vertices in cliques
         v = sorted(set(sum(all_cliques, ())))
-        print('\t', n, "cliques found with", len(v), "unique vertices")
+        print(f"\t{n} cliques found with {len(v)} unique vertices")
 
         print("Building ILP data structures ... ")
         # cliques confidences - median(clique confidences)
@@ -247,11 +246,10 @@ def main(args):
             # median(Jaccard of members/edges) * median(members/nodes confidence)
             confidence[j] = np.median(
                 list(nx.get_node_attributes(subgraph, "weight").values()))
-            w[j] = confidence[j] * \
-                np.median(list(nx.get_edge_attributes(
-                    subgraph, "weight").values()))
+            w[j] = confidence[j] * np.median(list(nx.get_edge_attributes(
+                subgraph, "weight").values()))
             # retain row / col indices for sparse matrix
-            cols.extend([j] * clique_size)
+            cols.extend([j] * k)
             rows.extend([v.index(val) for val in clique])
         assert (len(cliques) == len(
             w)), "Error - concensus coordinates and ILP weight vector are not equal lengths"
@@ -259,7 +257,7 @@ def main(args):
                 ), "Error - cliques weights and confidences are not equal lengths"
         assert (len(cols) == len(
             rows)), "Error - ILP sparse matrix indices (rows / cols) are not equal lengths"
-        assert (len(cliques) * clique_size == len(cols)
+        assert (len(cliques) * k == len(cols)
                 ), "Error - consensus coordinates or ILP sparse matrix indices (rows / cols) missing"
         A = coo_matrix(([1] * len(cols), (rows, cols)), shape=(len(v), n))
         del n, v, rows, cols, j, clique, subgraph
@@ -270,8 +268,8 @@ def main(args):
             cliques = [methods] + cliques
             if not args.get_cc:
                 clique_set = set([val for clique in cliques for val in clique])
-                for j in range(0, clique_size, 1):
-                    cliques.extend([get_box_vertex_entry(val, clique_size, j)
+                for j in range(0, k, 1):
+                    cliques.extend([get_box_vertex_entry(val, k, j)
                                     for val in set(coords[j]).difference(clique_set)])
 
         for label, val in zip(

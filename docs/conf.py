@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -41,6 +42,16 @@ rm tmp.txt"""],
                    shell=True)
 
 
+def get_version():
+    """
+    Pulls REPIC version from Git files
+    """
+    with open("../repic/__version__.py", 'rt') as f:
+        version = f.readlines()[-1].split()[-1].replace('"', '')
+
+    return version
+
+
 convert_readme_to_rest()
 
 # -- Project information -----------------------------------------------------
@@ -49,7 +60,7 @@ convert_readme_to_rest()
 project = 'REPIC'
 copyright = '2023, Christopher JF Cameron'
 author = 'Christopher JF Cameron'
-release = '0.0.0'
+release = get_version()
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

@@ -1,5 +1,5 @@
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![Anaconda-Server Badge](https://anaconda.org/bioconda/repic/badges/version.svg)](https://anaconda.org/bioconda/repic)
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/repic/badges/version.svg?branch=master&kill_cache=1)](https://anaconda.org/bioconda/repic)
 ![Conda](https://img.shields.io/conda/pn/bioconda/repic)
 [![Documentation Status](https://readthedocs.org/projects/repic/badge/?version=latest)](https://repic.readthedocs.io/en/latest/?badge=latest)
 [![DOI](https://zenodo.org/badge/515683107.svg)](https://zenodo.org/badge/latestdoi/515683107)
@@ -251,9 +251,19 @@ If REPIC was used in your analysis/study, please cite:
 
 Cameron, C.J.F., Seager, S.J.H., Sigworth, F.J., Tagare, H.D., and Gerstein, M.B. **REPIC - an ensemble learning methodology for cryo-EM particle picking**. *BioRxiv*. DOI: [10.1101/2023.05.13.540636v1](https://www.biorxiv.org/content/10.1101/2023.05.13.540636v1)
 
+##  Contact
+[Submitting a GitHub issue](https://github.com/ccameron/REPIC/issues) is preferred for all problems related to REPIC.
+
+For other concerns, please email [Christopher JF Cameron](mailto:christopher.cameron@yale.edu?subject=REPIC%20issue/question). 
+
 ## Releases
 
+### v0.2.0
+ - k-d tree algorithm integrated to reduce graph building runtime
+ - Approval to include DeepPicker with REPIC install/distribution added: https://github.com/ccameron/REPIC/blob/main/imgs/deeppicker_approval.png  
+ - Various bug fixes
+
 ### v0.1.0
-- SciPy ILP optimizer integrated to remove Gurobi package requirment
+- SciPy ILP optimizer integrated to remove Gurobi package requirement
 - Read the Docs documentation created: [https://repic.readthedocs.io/en/latest/](https://repic.readthedocs.io/en/latest/)
 - Various bug fixes

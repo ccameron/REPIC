@@ -1,7 +1,7 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 #
-#	iter_config.py
-#	author: Christopher JF Cameron
+# iter_config.py
+# author: Christopher JF Cameron
 #
 """
     Creates config file (JSON format) of the general iterative ensemble particle picking parameters
@@ -82,7 +82,7 @@ def main(args):
     assert(os.path.exists(args.data_dir)
            ), f"Error - training data directory does not exist: {args.data_dir}"
     assert(os.path.exists(args.cryolo_model)
-           ), f"Error - provided SPHIRE-crYOLO model not found: {args.crolo_model}"
+           ), f"Error - provided SPHIRE-crYOLO model not found: {args.cryolo_model}"
 
     #   check that DeepPicker path is valid
     assert(os.path.exists(args.deep_dir)

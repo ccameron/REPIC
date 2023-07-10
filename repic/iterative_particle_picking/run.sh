@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-#  run.sh - perform particle picking using iterative ensemble learning
-#  author: Christopher JF Cameron
+# run.sh - perform particle picking using iterative ensemble learning
+# author: Christopher JF Cameron
 #
 
 #  set filepath to REPIC install src/

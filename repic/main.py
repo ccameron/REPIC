@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
-#	main.py
-#	author: Christopher JF Cameron
+# main.py
+# author: Christopher JF Cameron
 #
 """Entry point for Conda and pip installation of REPIC"""
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
-#	iter_pick.py
-#	author: Christopher JF Cameron
+# iter_pick.py
+# author: Christopher JF Cameron
 #
 """Python wrapper script for repic/iterative_particle_picking/run.sh"""
 import pathlib
