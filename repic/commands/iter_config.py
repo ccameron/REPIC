@@ -78,22 +78,22 @@ def main(args):
         args (obj): argparse command line argument object
     """
     print("Validating config parameters")
-    #	check that the training data directory and SPHIRE-crYOLO model exist
-    assert(os.path.exists(args.data_dir)
-           ), f"Error - training data directory does not exist: {args.data_dir}"
-    assert(os.path.exists(args.cryolo_model)
-           ), f"Error - provided SPHIRE-crYOLO model not found: {args.cryolo_model}"
+    # check that the training data directory and SPHIRE-crYOLO model exist
+    assert (os.path.exists(args.data_dir)
+            ), f"Error - training data directory does not exist: {args.data_dir}"
+    assert (os.path.exists(args.cryolo_model)
+            ), f"Error - provided SPHIRE-crYOLO model not found: {args.cryolo_model}"
 
     #   check that DeepPicker path is valid
-    assert(os.path.exists(args.deep_dir)
-           ), f"Error - DeepPicker directory does not exist: {args.deep_dir}"
+    assert (os.path.exists(args.deep_dir)
+            ), f"Error - DeepPicker directory does not exist: {args.deep_dir}"
     #   check that DeepPicker folder contains expected files
     prefix = os.path.join(args.deep_dir, '')
     deep_files = set([file.replace(os.path.join(prefix), '')
                       for file in glob.glob(os.path.join(prefix, "**", '*'), recursive=True)])
     deep_files = exp_deep_files - deep_files
-    assert(len(deep_files) ==
-           0), f"Error - DeepPicker file(s) are missing: {', '.join(deep_files)}"
+    assert (len(deep_files) ==
+            0), f"Error - DeepPicker file(s) are missing: {', '.join(deep_files)}"
     del prefix, deep_files
 
     #   check that provided Conda environment names can be found
@@ -105,8 +105,8 @@ def main(args):
             continue
         envs.append(line.split()[0])
     envs = set([args.cryolo_env, args.deep_env, args.topaz_env]) - set(envs)
-    assert(len(envs) ==
-           0), f"Error - Conda environment(s) not found: {', '.join(envs)}"
+    assert (len(envs) ==
+            0), f"Error - Conda environment(s) not found: {', '.join(envs)}"
     del envs, stdout, line
 
     #   write JSON file of iter_pick parameters

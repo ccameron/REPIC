@@ -6,7 +6,7 @@ package:
 
 source:
   url:                https://github.com/ccameron/REPIC/archive/v{{ version }}.zip
-  sha256:             d4bf208eb5a66c8eabde511f3f1b943990b19be5690f32b7c0a476bc07cca0ca
+  sha256:             1c6a1701ecc58e4732d82a3b8ef20b473974e662e40a4c42944482aeae325c0f
 
 requirements:
   host:

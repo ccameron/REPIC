@@ -10,6 +10,7 @@ from repic.utils.common import *
 name = "iter_pick"
 """str: module name (used by argparse subparser)"""
 
+
 def add_arguments(parser):
     """
     Adds argparse command line arguments for iter_pick.py
@@ -71,7 +72,8 @@ def main(args):
     ]
 
     #   run iterative ensemble particle picking
-    out_file = os.path.join(params_dict["data_dir"], "iter_pick.log") if args.out_file_path is None else args.out_file_path
+    out_file = os.path.join(
+        params_dict["data_dir"], "iter_pick.log") if args.out_file_path is None else args.out_file_path
     print(f"""Note - stderr and stdout are being written to: {out_file}
 Please review this file for iterative ensemble particle picking progress""")
     with open(out_file, 'wt') as o:

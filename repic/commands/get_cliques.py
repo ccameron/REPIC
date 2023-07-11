@@ -168,7 +168,8 @@ def main(args):
             for i, method in enumerate(methods[1:], 1):
                 coords = np.concatenate((coords,
                                          np.asarray(get_box_coords(os.path.join(args.in_dir, method, basename),
-                                                                   key=i / float(k),
+                                                                   key=i /
+                                                                   float(k),
                                                                    return_weights=True))))
             del i, method
         except (UnboundLocalError, IndexError) as e:
