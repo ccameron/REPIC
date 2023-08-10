@@ -20,11 +20,11 @@ from tqdm import tqdm
 def get_segmentation_scores(norm_boxes, pckr_boxes, conf_thresh=None, mrc_w=None,
                             mrc_h=None):
     """
-    Creates segmanetation maps of particle picking algorithm and normative particle detections, then calculates performance metrics (precision, recall, F1-score, and positive fraction of particles)
+    Creates segmanetation maps of particle picking algorithm and normative particle bounding boxes, then calculates performance metrics (precision, recall, F1-score, and positive fraction of particles)
 
     Args:
-        norm_boxes (list): list of normative particle detection boxes
-        pckr_boxes (list): list of particle picking algorithm detection boxes
+        norm_boxes (list): list of normative particle bounding boxes
+        pckr_boxes (list): list of particle picking algorithm bounding boxes
 
     Keyword Args:
         conf_thresh (float or None): false positive filtering threshold of particle picking algorithm
@@ -68,12 +68,12 @@ def get_segmentation_scores(norm_boxes, pckr_boxes, conf_thresh=None, mrc_w=None
 if __name__ == "__main__":
     # argument parsing
     parser = argparse.ArgumentParser(
-        description="Score detections between ground truth and particle picker "
+        description="Score particles between ground truth and particle picker "
         "coordinate sets, matching files by name. All coordinate files must be "
         "in the BOX file format. Use coord_converter.py to perform any necessary "
         "conversion."
     )
-    """ obj: argparse parse_args() object"""
+    """obj: argparse parse_args() object"""
 
     parser.add_argument(
         "-g",

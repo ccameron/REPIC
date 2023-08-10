@@ -22,7 +22,7 @@ plt.switch_backend('agg')
 
 
 box_id = 0
-"""int: NetworkX initial node (particle detection box) ID"""
+"""int: NetworkX initial vertex (particle bounding box) ID"""
 
 
 def adjust_plot_attributes(ax, xlabel, ylabel, fontsize=32):
@@ -109,24 +109,25 @@ def del_dir(dir_path):
 
 def get_box_coords(pattern, key=1., size=None, return_weights=False):
     """
-    Parses particle detection box file (BOX format) and returns particle detection box coordinates
+    Parses particle bounding box file and returns particle bounding box coordinates
 
     Args:
-        pattern (str):
+        pattern (str): filename RegEx pattern
 
     Keyword Args:
         key (float, default=1.): method key for k-d tree building
         size (int or None): restrict the number of coordinates returned to this value
-        return_weight (bool, default=False): flag to include particle detection box score or confidence in return
+        return_weight (bool, default=False): flag to include particle bounding box score or confidence in return
 
     Returns:
-        list: list of particle detection box coordinates
+        list: list of particle bounding box coordinates
     """
     # BOX format description: https://blake.bcm.edu/emanwiki/Eman2OtherFiles
     global box_id
 
     for i, (in_file) in enumerate(glob.glob(pattern)):
         with open(in_file, 'rt') as f:
+
             # check for header
             if is_float(f.readline().rstrip().split()[0]):
                 f.seek(0)
@@ -140,6 +141,7 @@ def get_box_coords(pattern, key=1., size=None, return_weights=False):
     Z = [1.] * len(X)
     keys = [key] * len(X)
     weights = [float(val) for val in weights]
+
     # check that weights are probabilities (clique weights will be > 0)
     if np.min(weights) < 0. or np.max(weights) > 1.:
         # convert log-likelihood to probability
@@ -172,15 +174,15 @@ def get_box_coords(pattern, key=1., size=None, return_weights=False):
 
 def get_box_vertex_entry(coord, clique_size, index):
     """
-    Returns particle detection box coordinates of a clique as a vector
+    Returns particle bounding box coordinates of a clique as a vector
 
     Args:
-        coord (list): particle detection box coordinates
+        coord (list): particle bounding box coordinates
         clique_size (int): size of clique
-        index (int): position of particle detection box in clique (determined by order of particle picking algorithms)
+        index (int): position of particle bounding boxes in clique (determined by order of particle picking algorithms)
 
     Returns:
-        list: particle detection box coordinates formatted for multi-box output
+        list: particle coordinates formatted for multi-out output
 
     """
     entry = [None] * clique_size
@@ -191,19 +193,19 @@ def get_box_vertex_entry(coord, clique_size, index):
 
 def get_multi_in_coords(in_file):
     """
-    Parses a particle detection box file that contains multiple boxes per line (optimal cliques) and returns their coordinates, labels, and weights
+    Parses a particle bounding box file that contains multiple boxes per line (optimal cliques) and returns their coordinates, labels, and weights
 
     Args:
-        in_file (str): filepath to particle detection box file
+        in_file (str): filepath to particle bounding box file
 
     Returns:
-        list, list, list: lists of particle detection box coordinates, labels, and weights
+        list, list, list: lists of particle bounding box coordinates, labels, and weights
     """
     coords, weights = [], []
     with open(in_file, 'rt') as f:
         # process header
         labels = f.readline().strip().split()
-        n = len(labels)  # number of boxes per line
+        n = len(labels)  # number of detections per line
         for line in f:
             line = line.strip().split()
             coords.append([tuple([float(val) for val in line[i:i + 2] if not val == "N/A"])

@@ -7,7 +7,13 @@
 Apply integer linear programming (ILP) optimizer (either Gurobi or SciPy supported) to identify best subset of k-sized cliques (consensus particles) in a globally optimal manner
 """
 
+
+import matplotlib as mpl
+
 from repic.utils.common import *
+from matplotlib import ticker
+
+mpl.rcParams['axes.unicode_minus'] = False
 
 #   determine ILP optimizer package to use
 use_gurobi = False
@@ -38,9 +44,64 @@ def add_arguments(parser):
     parser.add_argument(
         "in_dir", help="path to input directory containing get_cliques.py output")
     parser.add_argument("box_size", type=int,
-                        help="particle detection box size (in int[pixels])")
+                        help="particle bounding box size (in int[pixels])")
     parser.add_argument("--num_particles", type=int,
                         help="filter for the number of expected particles (int)")
+
+
+def plot_particle_weights(args, weights, num_mrc, out_dir):
+    """
+    Creates Matplotlib line plot of the expected number of particles per micrograph vs. clique weights
+
+    Args:
+        args (obj): argparse command line argument object
+        weights (list): list of consensus particle weights
+        num_mrc (int): number of micrographs analyzed
+        out_dir (str): dirpath to output directory
+
+    Return:
+        None
+    """
+    out_file = os.path.join(out_dir, "particle_dist.png")
+
+    #   sort weights: high->low
+    weights = sorted(weights, key=float, reverse=True)
+
+    #   find expected number of particles to retain 70% of consensus particles
+    total = 0
+    thres = sum(weights) * 0.7
+    rec_num = next((i for i, val in enumerate(weights, 1)
+                   if (total := total + val) >= thres), None)
+    rec_num = int((rec_num / num_mrc) + 1)  # exp num of particles per mrc
+    del thres, total
+
+    #   plot distribution of consensus particle weights
+    fig, ax = plt.subplots(1, 1, figsize=(16, 8))
+    ax.plot(weights, color="#BF40BF", lw=2)
+    y_max, y_min = max(weights), min(weights)
+    ax.fill_between(range(0, len(weights), 1), weights, y_min,
+                    color="#BF40BF", ec=None, alpha=0.32)
+    if not args.num_particles == None:
+        ax.vlines(num_mrc * args.num_particles, ymin=y_min, ymax=y_max,
+                  colors='k', lw=3, linestyles="dashed",
+                  label=f"USR $num\_particles = {args.num_particles}$")
+    #   add recommended exp_num parameter value
+    ax.vlines(rec_num * num_mrc, ymin=y_min, ymax=y_max, colors='k',
+              lw=3, linestyle="solid", label=f"REC $num\_particles = {rec_num}$")
+    plt.legend(ncol=2, bbox_to_anchor=(0.5, 1.1),
+               frameon=False, fontsize=24, loc="upper center")
+    adjust_plot_attributes(
+        ax, "number of particles per micrograph", "particle weight")
+    #   adjust x-tick labels
+    fig.canvas.draw()
+    xtick_labels = [item.get_text() for item in ax.get_xticklabels()]
+    ax.xaxis.set_major_locator(ticker.FixedLocator(ax.get_xticks()))
+    ax.xaxis.set_major_formatter(ticker.FixedFormatter(
+        [(int(val) // num_mrc) if int(val) > 0 else val for val in xtick_labels]))
+    plt.tight_layout()
+    plt.savefig(out_file, bbox_inches='tight', dpi=300)
+    plt.close(fig)
+    del weights, out_file, fig, ax, y_max, y_min, xtick_labels
 
 
 def main(args):
@@ -52,6 +113,8 @@ def main(args):
     """
     assert (os.path.isdir(args.in_dir)), "Error - input directory is missing"
 
+    num_mrc = 0
+    weights = []
     for matrix_file in glob.glob(os.path.join(args.in_dir, "*_constraint_matrix.pickle")):
 
         start = time.time()
@@ -117,7 +180,7 @@ def main(args):
             del w, b_u, b_l, constraint, res
 
         # check that each vertex is only chosen once
-        assert (np.max(np.sum(A.toarray() * x, axis=1)) ==
+        assert (max(np.sum(A.toarray() * x, axis=1)) ==
                 1), "Error - vertices are assigned to multiple cliques"
 
         # load clique coordinates
@@ -137,60 +200,56 @@ def main(args):
             labels = coords[0]
             coords = coords[1:]
         # filter coords and clique weights for chosen cliques
-        cliques, confidences = zip(*[(coords[i], confidences[i])
-                                     for i in np.where(x == 1.)[0]])
-        del x
+        cliques, confidences = zip(*sorted([(coords[i], confidences[i])
+                                            for i in np.where(x == 1.)[0]], key=lambda x: float(x[-1]), reverse=True))
+        del coords, x
 
-        tmp = len(cliques)
-        if multi_out:
-            # retain vertices not found in chosen cliques
-            coord_sets = [set([val for val in coord_set if val])
-                          for coord_set in zip(*coords[:])]
-            clique_sets = [set([val for val in clique_set if val])
-                           for clique_set in zip(*cliques[:])]
-            cliques, w = list(cliques), list(confidences)
-            n = len(coord_sets)
-            for i in range(0, n, 1):
-                v = coord_sets[i].difference(clique_sets[i])
-                cliques.extend([get_box_vertex_entry(val, n, i) for val in v])
-                confidences.extend([0.] * len(v))
-            assert (len(cliques) == len(confidences)
-                    ), "Error - missing vertices and / or weights"
-            del coord_sets, clique_sets, n, v
-        del coords
-
+        #   write consensus particles to storage
         box_size = str(args.box_size)
         out_file = matrix_file.replace("_constraint_matrix.pickle",
                                        ".tsv" if multi_out else ".box")
         with open(out_file, 'wt') as o:
             if multi_out:
-                o.write('\t'.join(labels) + '\n')
-                o.write('\n'.join(['\t'.join(['\t'.join([
-                        str(int(np.rint(val[0]))), str(int(np.rint(val[1])))])
-                    if val else "N/A\tN/A" for val in vals] + [str(weight)])
-                    for (vals, weight) in zip(cliques, confidences)]))
+                o.write(''.join(
+                    ['\t'.join(
+                        ['_'.join([label, dim]) for label in labels for dim, _ in zip(['x', 'y', 'z'], cliques[0][0][:-1])] +
+                        ["clique_weight"]),
+                     '\n']))
+                o.write('\n'.join(
+                        ['\t'.join(
+                            [str(int(np.rint(val))) for vals in clique for val in vals[:-1]] +
+                            [str(weight)])
+                         for (clique, weight) in zip(cliques, confidences)]))
             else:
-                for i, (val, weight) in enumerate(sorted(zip(cliques, confidences),
-                                                         key=lambda x: x[1], reverse=True)):
+                for i, (vals, weight) in enumerate(zip(cliques, confidences)):
+
                     if (args.num_particles == None) or (i < args.num_particles):
-                        o.write('\t'.join([
-                                str(int(np.rint(val[0]))),
-                                str(int(np.rint(val[1]))),
-                                box_size,
-                                box_size,
-                                str(weight)]) + '\n')
+                        o.write(''.join([
+                            '\t'.join(
+                                [str(int(np.rint(val))) for val in vals[:-1]] +
+                                [box_size for val in vals[:-1]] +
+                                [str(weight)]
+                            ),
+                            '\n']))
         del out_file, basename, box_size
 
+        #   track ILP runtime
         out_file = matrix_file.replace(
             "_constraint_matrix.pickle", "_runtime.tsv")
         with open(out_file, 'a') as o:
-            # runtime (in seconds)
-            o.write(str(time.time() - start) + '\n')
+            o.write(str(time.time() - start) + '\n')    # runtime (in seconds)
+
+        num_mrc += 1
+        weights += confidences
+
+    #   plot consensus particle weights
+    print("\nPlotting consensus particle weights ... ")
+    plot_particle_weights(args, weights, num_mrc, os.path.dirname(matrix_file))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    """ obj: argparse parse_args() object"""
+    """obj: argparse parse_args() object"""
     add_arguments(parser)
     args = parser.parse_args()
     main(args)

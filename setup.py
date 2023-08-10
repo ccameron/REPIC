@@ -11,7 +11,7 @@ from setuptools import find_packages, setup
 
 # package meta-data
 NAME = "repic"
-DESCRIPTION = "REPIC - an ensemble learning approach to cryo-EM particle picking."
+DESCRIPTION = "REPIC - an ensemble learning approach for cryo-EM particle picking."
 URL = "https://github.com/ccameron/REPIC"
 EMAIL = "christopher.cameron@yale.edu"
 AUTHOR = "Christopher JF Cameron"
@@ -23,9 +23,9 @@ REQUIRED = [
     "mrcfile>=1.4.3",
     "networkx>=2.8.4",
     "numpy>=1.24.2",
-    "pandas",
+    "pandas>=2.0.2",
     "scipy>=1.10.0",
-    "tqdm"
+    "tqdm>=4.65.0"
 ]
 
 work_dir = os.path.abspath(os.path.dirname(__file__))

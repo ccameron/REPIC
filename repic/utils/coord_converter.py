@@ -3,7 +3,7 @@
 # coord_converter.py
 # original author: Sebastian JH Seager
 # modified by: Christopher JF Cameron
-"""Converts particle detection box coordinates between different formats (STAR, BOX, dat, coord, etc.)"""
+"""Converts particle bounding box coordinates between different formats (STAR, BOX, dat, coord, etc.)"""
 
 import argparse
 import numpy as np
@@ -24,9 +24,9 @@ Box = namedtuple("Box", ["x", "y", "w", "h", "conf"])
 # set defaults starting from rightmost arg (conf)
 Box.__new__.__defaults__ = (0,)
 STAR_COL_X = "_rlnCoordinateX"
-"""STAR file column name for x-coordinate of particle detection box"""
+"""STAR file column name for x-coordinate of particle bounding box"""
 STAR_COL_Y = "_rlnCoordinateY"
-"""STAR file column name for y-coordinate of particle detection box"""
+"""STAR file column name for y-coordinate of particle bounding box"""
 STAR_COL_C = "_rlnAutopickFigureOfMerit"
 """STAR file column name for figure of merit"""
 STAR_COL_N = "_rlnMicrographName"
@@ -180,13 +180,13 @@ def _path_occupied(path_str):
 
 def cs_to_df(path):
     """
-    Converts particle detection box coordinate file (in CryoSparc format) into a Pandas dataframe with the correct column headers
+    Converts particle bounding box coordinate file (in CryoSparc format) into a Pandas dataframe with the correct column headers
 
     Args:
-        path (str): filepath to particle detection box file
+        path (str): filepath to particle bounding box file
 
     Returns:
-        obj: Pandas dataframe of particle detection box coordinates
+        obj: Pandas dataframe of particle bounding box coordinates
     """
     try:
         data = np.load(path, allow_pickle=True)
@@ -219,13 +219,13 @@ def cs_to_df(path):
 
 def star_to_df(path):
     """
-    Converts particle detection box coordinate file (in STAR file format) into a Pandas dataframe with the correct column headers
+    Converts particle bounding box coordinate file (in STAR file format) into a Pandas dataframe with the correct column headers
 
     Args:
-        path (str): filepath to particle detection box file
+        path (str): filepath to particle bounding box file
 
     Returns:
-        obj: Pandas dataframe of particle detection box coordinates
+        obj: Pandas dataframe of particle bounding box coordinates
     """
     header = {}
     header_line_count = 0  # file line index where data starts
@@ -272,16 +272,16 @@ def star_to_df(path):
 
 def tsv_to_df(path, header_mode=None):
     """
-    Converts particle detection box coordinate file (in TSV-like file format) into a Pandas dataframe, skipping any non-numeric header rows
+    Converts particle bounding box coordinate file (in TSV-like file format) into a Pandas dataframe, skipping any non-numeric header rows
 
     Args:
-        path (str): filepath to particle detection box file
+        path (str): filepath to particle bounding box file
 
     Keyword Args:
         header_mode (int, str, or None): One of None, "infer" or an int (row index). If None, any non-numeric rows at the top of the file are skipped and column names are not set. Otherwise, manual column skipping is not performed, and header_mode is passed directly to the header argument of pandas.read_csv
 
     Returns:
-        obj: Pandas dataframe of particle detection box coordinates
+        obj: Pandas dataframe of particle bounding box coordinates
     """
 
     if header_mode is None:
@@ -320,10 +320,10 @@ def tsv_to_df(path, header_mode=None):
 
 def df_to_star(df, out_path, force=False):
     """
-    Writes Panda dataframe of particle detection box coordinates (generated from one of the *_to_df methods) to storage in STAR file format
+    Writes Panda dataframe of particle bounding box coordinates (generated from one of the *_to_df methods) to storage in STAR file format
 
     Args:
-        df (object): Pandas dataframe of particle detection box coordinates
+        df (object): Pandas dataframe of particle bounding box coordinates
         out_path (str): filepath to output file
 
     Keyword Args:
@@ -358,10 +358,10 @@ def df_to_star(df, out_path, force=False):
 
 def df_to_tsv(df, col_order, out_path, include_header=False, force=False):
     """
-    Writes Panda dataframe of particle detection box coordinates (generated from one of the *_to_df methods) to storage, optionally writing out [x, y, w, h, conf] labels as a header
+    Writes Panda dataframe of particle bounding box coordinates (generated from one of the *_to_df methods) to storage, optionally writing out [x, y, w, h, conf] labels as a header
 
     Args:
-        df (object): Pandas dataframe of particle detection box coordinates
+        df (object): Pandas dataframe of particle bounding box coordinates
         col_order (list): list of ordered file columns
         out_path (str): filepath to output file
 
@@ -404,25 +404,25 @@ def process_conversion(
     quiet=False,
 ):
     """
-    Converts between different particle detection box formats
+    Converts between different particle bounding box formats
 
     Args:
-        paths (list): filepaths of particle detection box coordinate files
+        paths (list): filepaths of particle bounding box coordinate files
         in_fmt (str): input file format
         out_fmt (str): output file format
 
     Keyword Args:
-        boxsize (int or None): particle detection box height/width
+        boxsize (int or None): particle bounding box height/width
         out_dir (str or None): filepath to output file
         in_cols (tuple): tuple of column determination (default=auto)
         out_col_order (tuple): output column order
         suffix (str): additional suffix for output files (default='')
         include_header (bool, default=False): include header in output file
-        single_out (bool, default=False): output particle detection box coordinates in a single file
-        multi_out (bool, default=False): output particle detection box coordinates in multiple files (one per micrograph)
+        single_out (bool, default=False): output particle bounding box coordinates in a single file
+        multi_out (bool, default=False): output particle bounding box coordinates in multiple files (one per micrograph)
         round_to (int or None): round coordinates to the specified number of decimal places
         norm_conf (list or None): list of min and max confidence values to be used to normalize observed confidence scores
-        require_conf (float or None): model confidence score to assign to particle detection boxes without a score
+        require_conf (float or None): model confidence score to assign to particle bounding boxes without a score
         force (bool, default=False): overwrite output file if it exists
         quiet (bool, default=False): suppress log printing
 
@@ -597,7 +597,7 @@ if __name__ == "__main__":
         "parameters define the conversion. The -c argument can be used if more "
         "granular control over column indices is required."
     )
-    """ obj: argparse parse_args() object"""
+    """obj: argparse parse_args() object"""
     parser.add_argument(
         "input", help="Path(s) to input particle coordinates", nargs="+"
     )

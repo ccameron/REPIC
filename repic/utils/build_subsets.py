@@ -31,17 +31,17 @@ def add_arguments(parser):
         None
     """
     parser.add_argument("defocus_file", type=str,
-                        help="file path to RELION CTFFIND4 defocus values")
+                        help="filepath to RELION CTFFIND4 defocus values")
     parser.add_argument("box_dir", type=str,
-                        help="file path to directory containing particle BOX files (*.box)")
+                        help="filepath to directory containing particle BOX files (*.box)")
     parser.add_argument("mrc_dir", type=str,
-                        help="file path to directory containing micrograph MRC files (*.mrx)")
+                        help="filepath to directory containing micrograph MRC files (*.mrc)")
     parser.add_argument("out_dir", type=str,
-                        help="file path to output directory")
+                        help="filepath to output directory")
     parser.add_argument("--train_set", type=str,
                         help="check if specific training subset is available after dataset splitting")
     parser.add_argument("--ignore_test", default=False, action="store_true",
-                        help="only build train and val datasets (no train subsets)")
+                        help="only build train and val datasets (no test subsets)")
 
 
 def calc_subsets(n, s=3):
@@ -121,7 +121,6 @@ def plot_defocus(data, low, med, out_file):
     fig, ax = plt.subplots(1, 1, figsize=(8, 8))
     y_range, x_domain, _ = ax.hist(
         defocus, bins=32, facecolor="tab:blue", edgecolor='k')
-    # bin_size = x_domain.ptp() // 32
     # add low, medium, and high bin lines
     ax.axvline(low[-1][1], color="tab:red", lw=2)
     if len(med) > 0:
@@ -129,15 +128,15 @@ def plot_defocus(data, low, med, out_file):
     # add low, medium, and high text labels
     x = (x_domain.min() + low[-1][1]) / 2
     y = y_range.max() * 1.1
-    ax.text(x, y, "Low", size=16, color='k', ha="center")
+    ax.text(x, y, "low", size=16, color='k', ha="center")
     if len(med) > 0:
         x = (low[-1][1] + med[-1][1]) / 2
-        ax.text(x, y, "Medium", size=16, color='k', ha="center")
+        ax.text(x, y, "medium", size=16, color='k', ha="center")
         x = (med[-1][1] + x_domain.max()) / 2
     else:
         x = (low[-1][1] + x_domain.max()) / 2
-    ax.text(x, y, "High", size=16, color='k', ha="center")
-    adjust_plot_attributes(ax, "Mean defocus value", "Frequency")
+    ax.text(x, y, "high", size=16, color='k', ha="center")
+    adjust_plot_attributes(ax, "mean defocus value", "frequency")
     plt.tight_layout()
     plt.savefig(out_file, bbox_inches='tight', dpi=300)
     plt.close(fig)
@@ -304,7 +303,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    """ obj: argparse parse_args() object"""
+    """obj: argparse parse_args() object"""
     add_arguments(parser)
     args = parser.parse_args()
     main(args)

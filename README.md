@@ -164,11 +164,11 @@ The final set of consensus particles for the testing set should be found in:
 usage: repic get_cliques [-h] [--multi_out] [--get_cc] in_dir out_dir box_size
 
 positional arguments:
-  in_dir       path to input directory containing subdirectories of particle coordinate files
+  in_dir       path to input directory containing subdirectories of particle bounding box coordinate files
   out_dir      path to output directory (WARNING - script will delete directory if it exists)
-  box_size     particle detection box size (in int[pixels])
+  box_size     particle bounding box size (in int[pixels])
 
-options:
+optional arguments:
   -h, --help   show this help message and exit
   --multi_out  set output of cliques to be members sorted by picker name
   --get_cc     filters cliques for those in the largest Connected Component (CC)
@@ -181,13 +181,14 @@ usage: repic run_ilp [-h] [--num_particles NUM_PARTICLES] in_dir box_size
 
 positional arguments:
   in_dir                path to input directory containing get_cliques.py output
-  box_size              particle detection box size (in int[pixels])
+  box_size              particle bounding box size (in int[pixels])
 
-options:
+optional arguments:
   -h, --help            show this help message and exit
   --num_particles NUM_PARTICLES
                         filter for the number of expected particles (int)
   ```
+[run_ilp.py](https://github.com/ccameron/REPIC/blob/main/repic/commands/run_ilp.py) will create a plot of the concensus particle distribution (``` particle_dist.png ```) with a recommended (REC) ``` num_particles ``` value (70\% of consensus particles) in the ``` in_dir ```.
 
 ### Particle picking by iterative ensemble learning
 
@@ -198,7 +199,7 @@ usage: repic iter_config [-h] [--cryolo_env CRYOLO_ENV] [--deep_env DEEP_ENV] [-
 
 positional arguments:
   data_dir              path to directory containing training data
-  box_size              particle detection box size (in int[pixels])
+  box_size              particle bounding box size (in int[pixels])
   exp_particles         number of expected particles (int)
   cryolo_model          path to LOWPASS SPHIRE-crYOLO model
   deep_dir              path to DeepPicker scripts
@@ -233,17 +234,19 @@ done
 
 2. Iteratively pick particles using a Python script wrapper [iter_pick.py](https://github.com/ccameron/REPIC/blob/main/repic/commands/iter_pick.py) of [run.sh](https://github.com/ccameron/REPIC/blob/main/repic/iterative_particle_picking/run.sh):
 ```
-usage: repic iter_pick [-h] [--semi_auto] [--score] config_file num_iter train_size
+usage: repic iter_pick [-h] [--semi_auto] [--score] [--out_file_path OUT_FILE_PATH] config_file num_iter train_size
 
 positional arguments:
-  config_file  path to REPIC config file
-  num_iter     number of iterations (int)
-  train_size   training subset size (int)
+  config_file           path to REPIC config file
+  num_iter              number of iterations (int)
+  train_size            training subset percentage (int)
 
 optional arguments:
-  -h, --help   show this help message and exit
-  --semi_auto  initialize training labels with known particles (semi-automatic)
-  --score      evaluate picked particle sets
+  -h, --help            show this help message and exit
+  --semi_auto           initialize training labels with known particles (semi-automatic)
+  --score               evaluate picked particle sets
+  --out_file_path OUT_FILE_PATH
+                        path for picking log file (default:<data_dir>/iter_pick.log)
 ```
 ``` train_size ``` references the output of [build_subsets.py](https://github.com/ccameron/REPIC/blob/main/repic/commands/build_subsets.py), which builds training subsets of sizes 1%, 25%, 50%, and 100% (i.e., 100% will use the entire training set). For more information on dataset handling please see "iterative ensemble particle picking with REPIC" in the Methods section of the REPIC manuscript.
 
@@ -260,7 +263,7 @@ Cameron, C.J.F., Seager, S.J.H., Sigworth, F.J., Tagare, H.D., and Gerstein, M.B
 ##  Contact
 [Submitting a GitHub issue](https://github.com/ccameron/REPIC/issues) is preferred for all problems related to REPIC.
 
-For other concerns, please email [Christopher JF Cameron](mailto:christopher.cameron@yale.edu?subject=REPIC%20issue/question). 
+For other concerns, please email [Christopher JF Cameron](mailto:christopher.cameron@yale.edu?subject=REPIC%20issue/question).
 
 ## Releases
 

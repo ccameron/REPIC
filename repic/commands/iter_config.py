@@ -50,7 +50,7 @@ def add_arguments(parser):
     parser.add_argument(
         "data_dir", help="path to directory containing training data")
     parser.add_argument("box_size", type=int,
-                        help="particle detection box size (in int[pixels])")
+                        help="particle bounding box size (in int[pixels])")
     parser.add_argument("exp_particles", type=int,
                         help="number of expected particles (int)")
     parser.add_argument(
@@ -121,7 +121,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    """ obj: argparse parse_args() object"""
+    """obj: argparse parse_args() object"""
     add_arguments(parser)
     args = parser.parse_args()
     main(args)

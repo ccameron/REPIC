@@ -26,7 +26,7 @@ def add_arguments(parser):
     parser.add_argument("num_iter", type=int,
                         help="number of iterations (int)")
     parser.add_argument("train_size", type=int,
-                        help="training subset size (int)")
+                        help="training subset percentage (int)")
     parser.add_argument("--semi_auto", action="store_true",
                         help="initialize training labels with known particles (semi-automatic)")
     parser.add_argument("--score", action="store_true",
@@ -83,7 +83,7 @@ Please review this file for iterative ensemble particle picking progress""")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    """ obj: argparse parse_args() object"""
+    """obj: argparse parse_args() object"""
     add_arguments(parser)
     args = parser.parse_args()
     main(args)
