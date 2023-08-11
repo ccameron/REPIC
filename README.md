@@ -4,7 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/repic/badge/?version=latest)](https://repic.readthedocs.io/en/latest/?badge=latest)
 [![DOI](https://zenodo.org/badge/515683107.svg)](https://zenodo.org/badge/latestdoi/515683107) -->
 
-:warning: **WARNING**: cryo-ET version of REPIC is currently under development and may contain errors/bugs. Please use with caution or wait for the official release in the future.
+:warning: **WARNING**: the cryo-ET version of REPIC is currently under development and may contain errors/bugs. Please use with caution or wait for the official release in the future.
 
 <img width="20%" src="imgs/repic_icon.png">
 

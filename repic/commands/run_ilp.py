@@ -237,7 +237,7 @@ def main(args):
         out_file = matrix_file.replace(
             "_constraint_matrix.pickle", "_runtime.tsv")
         with open(out_file, 'a') as o:
-            o.write(str(time.time() - start) + '\n')    # runtime (in seconds)
+            o.write(f"{str(time.time() - start)}\n")    # runtime (in seconds)
 
         num_mrc += 1
         weights += confidences

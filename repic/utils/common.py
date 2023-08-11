@@ -146,8 +146,8 @@ def get_box_coords(pattern, key=1., size=None, return_weights=False, get_type=Fa
     # is_float() handles header if present
     X = [float(x) for x in X if is_float(x)]
     Y = [float(y) for y in Y if is_float(y)]
-    Z = [1.] * len(X)
-    keys = [key] * len(X) if Z == None else [float(z) for z in Z if is_float(z)]
+    Z = [1.] * len(X) if Z == None else [float(z) for z in Z if is_float(z)]
+    keys = [key] * len(X)
     weights = [float(val) for val in weights]
 
     # check that weights are probabilities (clique weights will be > 0)

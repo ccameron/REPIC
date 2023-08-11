@@ -68,15 +68,17 @@ def add_nodes_to_graph(graph, node_pairs, node_names, k=3):
         graph.add_edge(coords_1, coords_2, weight=jaccard)
 
 
-def calc_jaccard(x, y, a, b, box_size):
+def calc_jaccard(x, y, z, a, b, c, box_size):
     """
-    Calculates Jaccard Index (similarity) for particle bounding boxes A (x,y) and B (a,b) with given box size
+    Calculates Jaccard Index (similarity) for particle bounding boxes A (x,y,z) and B (a,b,c) with given box size. For cryo-EM, z and c are set to 1.
 
     Args:
         x (int): x-coodinate of particle bounding box A
         y (int): y-coordinate of particle bounding box A
+        z (int): z-coordinate of particle bounding box A
         a (int): x-coordinate of particle bounding box B
         b (int): y-coordinate of particle bounding box B
+        c (int): z-coordinate of particle bounding box B
         box_size (int): particle bounding box height/width
 
     Returns:
@@ -84,9 +86,10 @@ def calc_jaccard(x, y, a, b, box_size):
     """
     x_overlap = max(min(x, a) + box_size - max(x, a), 0)
     y_overlap = max(min(y, b) + box_size - max(y, b), 0)
-    jaccard = x_overlap * y_overlap
+    z_overlap = max(min(z, c) + box_size - max(z, c), 0)
+    jaccard = x_overlap * y_overlap * z_overlap
 
-    return jaccard / ((2 * box_size ** 2) - jaccard)
+    return jaccard / ((2 * box_size ** 3) - jaccard)
 
 
 def find_cliques(graph, k):
@@ -151,7 +154,7 @@ def main(args):
     print(f"Using {start_method} BOX files as starting point")
 
     # iterate over grouped particle bounding box files
-    k = len(methods)  # number of methods/clique size
+    k = len(methods)    # number of methods/clique size
     for in_file in glob.glob(os.path.join(args.in_dir, methods[0], "*.box")):
 
         start = time.time()
@@ -164,13 +167,14 @@ def main(args):
         try:
             # get coords for each provided picker
             # key = i/k for method i of k methods
-            coords = np.array(get_box_coords(
-                in_file, key=0., return_weights=True))
+            coords, data_type = get_box_coords(
+                in_file, key=0., return_weights=True, get_type=True)
+            coords = np.array(coords)
             for i, method in enumerate(methods[1:], 1):
+
                 coords = np.concatenate((coords,
                                          np.asarray(get_box_coords(os.path.join(args.in_dir, method, basename),
-                                                                   key=i /
-                                                                   float(k),
+                                                                   key=i / (k * 1.),
                                                                    return_weights=True))))
             del i, method
         except (UnboundLocalError, IndexError) as e:
@@ -195,10 +199,15 @@ def main(args):
         for i, j in pairs:
             x, y, z, key_1, weight_1, id_1 = coords[i]
             a, b, c, key_2, weight_2, id_2 = coords[j]
-            if (not key_1 == key_2) and ((jaccard := calc_jaccard(x, y, a, b, args.box_size)) > 0.3):
-                data.append(
-                    tuple([(x, y, id_1), key_1, weight_1, (a, b, id_2), key_2, weight_2, jaccard]))
-        del coords, kd_tree, x, y, z, key_1, weight_1, id_1, a, b, c, key_2, weight_2, id_2, jaccard
+            if (not key_1 == key_2) and ((jaccard := calc_jaccard(x, y, z, a, b, c, args.box_size)) > 0.3):
+                if data_type == "cryoem":
+                    vals = tuple([(x, y, id_1), key_1, weight_1,
+                                 (a, b, id_2), key_2, weight_2, jaccard])
+                else:
+                    vals = tuple([(x, y, z, id_1), key_1, weight_1,
+                                 (a, b, c, id_2), key_2, weight_2, jaccard])
+                data.append(vals)
+        del coords, kd_tree, x, y, z, key_1, weight_1, id_1, a, b, c, key_2, weight_2, id_2, jaccard, vals
 
         print("Building graph ... ")
         # build graph weighted pairs
@@ -282,7 +291,7 @@ def main(args):
         with open(out_file, 'wt') as o:
             # runtime (in seconds), largest CC, number of CC
             o.write('\t'.join([str(val) for val in [time.time() - start,
-                    np.max(components), len(components)]]) + '\n')
+                    max(components), len(components)]]) + '\n')
 
 
 if __name__ == '__main__':
