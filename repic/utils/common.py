@@ -107,7 +107,7 @@ def del_dir(dir_path):
     return dir_path
 
 
-def get_box_coords(pattern, key=1., size=None, return_weights=False):
+def get_box_coords(pattern, key=1., size=None, return_weights=False, get_type=False):
     """
     Parses particle bounding box file and returns particle bounding box coordinates
 
@@ -118,6 +118,7 @@ def get_box_coords(pattern, key=1., size=None, return_weights=False):
         key (float, default=1.): method key for k-d tree building
         size (int or None): restrict the number of coordinates returned to this value
         return_weight (bool, default=False): flag to include particle bounding box score or confidence in return
+        get_type (bool, default=False): flag to return data type based on coordinates (cryo-EM or cryo-ET)
 
     Returns:
         list: list of particle bounding box coordinates
@@ -125,13 +126,20 @@ def get_box_coords(pattern, key=1., size=None, return_weights=False):
     # BOX format description: https://blake.bcm.edu/emanwiki/Eman2OtherFiles
     global box_id
 
+    data_type = "cryoem"
     for i, (in_file) in enumerate(glob.glob(pattern)):
         with open(in_file, 'rt') as f:
 
             # check for header
             if is_float(f.readline().rstrip().split()[0]):
                 f.seek(0)
-            X, Y, H, W, weights = zip(*[val.strip().split() for val in f])
+            try:    #   cryo-EM
+                X, Y, H, W, weights = zip(*[val.strip().split() for val in f])
+                Z, D = None, None
+            except ValueError:  #   cryo-ET
+                f.seek(0)
+                data_type = "cryoet"
+                X, Y, Z, H, W, D, weights = zip(*[val.strip().split() for val in f])
     assert (i == 0), ' '.join(["Error - multiple BOX files found using pattern:",
                                pattern])
 
@@ -139,11 +147,11 @@ def get_box_coords(pattern, key=1., size=None, return_weights=False):
     X = [float(x) for x in X if is_float(x)]
     Y = [float(y) for y in Y if is_float(y)]
     Z = [1.] * len(X)
-    keys = [key] * len(X)
+    keys = [key] * len(X) if Z == None else [float(z) for z in Z if is_float(z)]
     weights = [float(val) for val in weights]
 
     # check that weights are probabilities (clique weights will be > 0)
-    if np.min(weights) < 0. or np.max(weights) > 1.:
+    if min(weights) < 0. or max(weights) > 1.:
         # convert log-likelihood to probability
         weights = [1. / (1. + np.exp(-1. * val)) for val in weights]
 
@@ -169,7 +177,10 @@ def get_box_coords(pattern, key=1., size=None, return_weights=False):
                   for i, (x, y, z) in enumerate(zip(X, Y, Z, keys), box_id)]
     box_id = coords[-1][-1] + 1
 
-    return coords
+    if get_type:
+        return coords,data_type
+    else:
+        return coords
 
 
 def get_box_vertex_entry(coord, clique_size, index):
