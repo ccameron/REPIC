@@ -18,8 +18,11 @@ if [ -z "${REPIC_UTILS}" ]; then REPIC_UTILS=0; fi
 if [ -z "${CRYOLO_ENV}" ]; then CRYOLO_ENV="cryolo"; fi
 if [ -z "${CRYOLO_FILTERED_DIR}" ]; then CRYOLO_FILTERED_DIR=${REPIC_OUT_DIR}/filtered_tmp/; fi
 
-eval "$(conda shell.bash hook)"
-conda activate ${CRYOLO_ENV}
+if [ -x "$(command -v micromamba)" ]; then
+  eval "$(micromamba shell hook -s bash)" && micromamba activate ${CRYOLO_ENV}
+elif [ -x "$(command -v conda)" ]; then
+  eval "$(conda shell.bash hook)" && conda activate ${CRYOLO_ENV}
+fi
 
 #	create SPHIRE-crYOLO config file
 #	batch_size set to 2 for consistency between development machines
@@ -42,8 +45,6 @@ cryolo_train.py -c ${REPIC_OUT_DIR}/config_cryolo.json \
     -g 0 \
     -e 32 \
     --seed 1 \
-
-conda deactivate
 
 #	save runtime to storage
 END=$(date +%s.%N)

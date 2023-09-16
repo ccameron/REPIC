@@ -15,8 +15,11 @@ if [ -z "${TOPAZ_SCALE}" ]; then TOPAZ_SCALE=0; fi
 if [ -z "${TOPAZ_PARTICLE_RAD}" ]; then TOPAZ_PARTICLE_RAD=0; fi
 if [ -z "${TOPAZ_MODEL}" ]; then :; fi
 
-eval "$(conda shell.bash hook)"
-conda activate ${TOPAZ_ENV}
+if [ -x "$(command -v micromamba)" ]; then
+  eval "$(micromamba shell hook -s bash)" && micromamba activate ${TOPAZ_ENV}
+elif [ -x "$(command -v conda)" ]; then
+  eval "$(conda shell.bash hook)" && conda activate ${TOPAZ_ENV}
+fi
 
 #	identify particles
 # if TOPAZ_MODEL is not set, use the general model (don't supply -m)
@@ -34,8 +37,6 @@ else
       -o ${REPIC_OUT_DIR}/predicted_particles_all_upsampled.txt \
       ${REPIC_MRC_DIR}/downsampled_mrc/*.mrc
 fi
-
-conda deactivate
 
 #	create empty BOX files to be replaced by /src/coord_converter.py
 OUT_DIR=$(basename ${REPIC_MRC_DIR} | cut -d'_' -f1)

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #	fit_deep.sh - fits DeepPicker model to micrographs
-# author: Christopher JF Cameron
+#	author: Christopher JF Cameron
 #
 
 #	track runtime
@@ -31,14 +31,15 @@ for BOX_FILE in ${REPIC_VAL_COORD}/*.box; do
 done
 REPIC_VAL_COORD=${REPIC_VAL_COORD}/STAR
 
-eval "$(conda shell.bash hook)"
-conda deactivate
+if [ -x "$(command -v micromamba)" ]; then
+  eval "$(micromamba shell hook -s bash)" && micromamba activate ${DEEP_ENV}
+elif [ -x "$(command -v conda)" ]; then
+  eval "$(conda shell.bash hook)" && conda activate ${DEEP_ENV}
+fi
 
 #	softlink micrographs to coordinate directory
 cp -s ${REPIC_TRAIN_MRC}/*.mrc ${REPIC_TRAIN_COORD}/
 cp -s ${REPIC_VAL_MRC}/*.mrc ${REPIC_VAL_COORD}/
-
-conda activate ${DEEP_ENV}
 
 python ${DEEP_DIR}/train.py --train_type 1 \
     --train_inputDir ${REPIC_TRAIN_COORD} \
@@ -54,8 +55,6 @@ python ${DEEP_DIR}/train.py --train_type 1 \
 #	remove softlinks
 rm -rf ${REPIC_TRAIN_COORD}
 rm -rf ${REPIC_VAL_COORD}
-
-conda deactivate
 
 #	save runtime to storage
 END=$(date +%s.%N)

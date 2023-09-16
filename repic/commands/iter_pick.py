@@ -77,7 +77,8 @@ def main(args):
     print(f"""Note - stderr and stdout are being written to: {out_file}
 Please review this file for iterative ensemble particle picking progress""")
     with open(out_file, 'wt') as o:
-        subprocess.run(cmd, text=True, stderr=subprocess.STDOUT, stdout=o)
+        subprocess.run(cmd, text=True,
+                       stderr=subprocess.STDOUT, stdout=o)
     del params_dict, script_dir, file_path, cmd, out_file
 
 

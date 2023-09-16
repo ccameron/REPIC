@@ -5,6 +5,7 @@
 #
 """Common functions and libraries shared across REPIC scripts"""
 
+from functools import partial
 from shutil import rmtree
 from pathlib import Path
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -20,6 +21,8 @@ import subprocess
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
+print = partial(print, flush=True)
+"""func: partial function to have all print statements flush buffer"""
 
 box_id = 0
 """int: NetworkX initial vertex (particle bounding box) ID"""
@@ -131,7 +134,14 @@ def get_box_coords(pattern, key=1., size=None, return_weights=False):
             # check for header
             if is_float(f.readline().rstrip().split()[0]):
                 f.seek(0)
-            X, Y, H, W, weights = zip(*[val.strip().split() for val in f])
+            try:
+                X, Y, H, W, weights = zip(*[val.strip().split() for val in f])
+            except ValueError:
+                f.seek(0)
+                X, Y, H, W = zip(*[val.strip().split() for val in f])
+                print(
+                    f"Warning - particles in coordinate file '{in_file}' are missing scores. Particles will be equally weighted")
+                weights = None
     assert (i == 0), ' '.join(["Error - multiple BOX files found using pattern:",
                                pattern])
 
@@ -140,7 +150,8 @@ def get_box_coords(pattern, key=1., size=None, return_weights=False):
     Y = [float(y) for y in Y if is_float(y)]
     Z = [1.] * len(X)
     keys = [key] * len(X)
-    weights = [float(val) for val in weights]
+    weights = [1.] * len(X) if weights == None else [float(val)
+                                                     for val in weights]
 
     # check that weights are probabilities (clique weights will be > 0)
     if np.min(weights) < 0. or np.max(weights) > 1.:

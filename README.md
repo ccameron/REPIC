@@ -29,9 +29,25 @@ Required:
 ** Required to reproduce manuscript results but if the Gurobi package is not found, REPIC will use the [SciPy ILP optimizer](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.milp.html)
 
 ## Installation guide
-REPIC installation is expected to only take a few minutes:
+REPIC installation is expected to only take a few minutes.
 
-**<details><summary>Install using Conda (recommended)</summary><p>**
+:warning: **WARNING**: Only the Docker installation of REPIC includes pickers (SPHIRE-crYOLO, DeepPicker, and Topaz). If installing REPIC using either Conda or pip, pickers will need to be separately installed (see [docs/](https://github.com/ccameron/REPIC/tree/main/docs/) for installation instructions).
+
+**<details><summary>Install using Docker (recommended)</summary><p>**
+
+1. [Install Docker](https://docs.docker.com/engine/install/) if the ``` docker ``` command is unavailable
+2. [Install and set up NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) for building and running GPU-accelerated containers
+3. Build CUDA-supported image from Dockerfile in REPIC GitHub repo:
+```
+docker build -t repic_img https://github.com/ccameron/REPIC.git#main
+```
+4. Run container with GPU acceleration (example [iter_pick.py](https://github.com/ccameron/REPIC/blob/main/repic/commands/iter_pick.py) command shown below):
+```
+docker run --gpus all -v <file_path>/REPIC/examples:/examples repic_img repic iter_pick /examples/10057/iter_config.json 4 100
+```
+</p></details>
+
+**<details><summary>Install using Conda</summary><p>**
 
 :warning: **WARNING**: if Python package conflicts are encountered during the Conda installation of REPIC, please ensure Conda channels are properly set for Bioconda. See [Bioconda Usage](https://bioconda.github.io/) for more information
 
@@ -55,6 +71,7 @@ conda clean --all
 </p></details>
 
 **<details><summary>Install from source using pip</summary><p>**
+
 1. Either download the package by clicking the "Clone or download" button, unzipping file in desired location, and renaming the directory "REPIC" OR using the following command line:
 ```
 git clone https://github.com/ccameron/REPIC
@@ -86,14 +103,38 @@ conda clean --all
 ```
 </p></details>
 
-To check if REPIC was correctly installed, run the following command (after activating the REPIC Conda environment):
+To check if REPIC was correctly installed, run the following command (after activating the REPIC Conda environment or using a REPIC container):
 ```
 repic -h
 ```
 A help menu should appear in the terminal.
 
 ## Integration
-REPIC is also available as a [Scipion](https://scipion.i2pc.es/)  plugin: [https://github.com/scipion-em/scipion-em-repic](https://github.com/scipion-em/scipion-em-repic)
+
+**<details><summary>Run using published Docker image (with Singularity/Apptainer)</summary><p>**
+
+A REPIC Docker image is published on both [DockerHub](https://hub.docker.com/r/cjfcameron/repic) and the [GitHub container registery](https://github.com/ccameron/REPIC/pkgs/container/repic). [Apptainer](https://apptainer.org/) (formerly Singularity) can be used to run this image:
+
+1. [Install Apptainer](https://apptainer.org/docs/admin/main/installation.html) if the ```apptainer``` command is unavailable
+2. [Install and set up NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) for building and running GPU-accelerated containers
+3. Pull REPIC Docker image and convert to Singularity image format (SIF) (requires >8 Gb of memory and ~40 mins for conversion):
+```
+apptainer pull docker://cjfcameron/repic:main
+```
+If SIF file creation is taking a long time, increase the ```mksquashfs mem``` parameter in the Apptainer config file (apptainer.conf). See [here](https://apptainer.org/docs/admin/1.0/configfiles.html) for more information.
+
+4. Run container with GPU acceleration (example [iter_pick.py](https://github.com/ccameron/REPIC/blob/main/repic/commands/iter_pick.py) command shown below):
+```
+apptainer run --nv --bind <file_path>/REPIC/examples:/examples repic_main.sif repic iter_pick /examples/10057/iter_config.json 4 100
+```
+</p></details>
+
+**<details><summary>Run using Scipion plugin</summary><p>**
+
+REPIC is available as a [Scipion](https://scipion.i2pc.es/)  plugin: [https://github.com/scipion-em/scipion-em-repic](https://github.com/scipion-em/scipion-em-repic)
+
+See [here](https://scipion-em.github.io/docs/release-3.0.0/docs/scipion-modes/how-to-install.html#installing-other-plugins) for information about installing plugins for Scipion.
+</p></details>
 
 ## Example data
 Example [SPHIRE-crYOLO](https://cryolo.readthedocs.io/en/stable/), [DeepPicker](https://github.com/jianlin-cheng/DeepCryoEM), and [Topaz](https://github.com/tbepler/topaz) picked particle coordinate files for $\beta$-galactosidase ([EMPIAR-10017](https://www.ebi.ac.uk/empiar/EMPIAR-10017/)) micrographs are found in [examples/10017/](https://github.com/ccameron/REPIC/tree/main/examples/10017/). These files were generated by applying the pre-trained pickers to $\beta$-galactosidase micrographs, filtering false positive per author suggested thresholds, and then converting files to BOX format using [coord_converter.py](https://github.com/ccameron/REPIC/blob/main/repic/utils/coord_converter.py).
@@ -266,6 +307,10 @@ Cameron, C.J.F., Seager, S.J.H., Sigworth, F.J., Tagare, H.D., and Gerstein, M.B
 For other concerns, please email [Christopher JF Cameron](mailto:christopher.cameron@yale.edu?subject=REPIC%20issue/question).
 
 ## Releases
+
+### v0.2.1
+ - Scipion plugin created
+ - Docker/Singularity/Apptainer integrated
 
 ### v0.2.0
  - k-d tree algorithm integrated to reduce graph building runtime

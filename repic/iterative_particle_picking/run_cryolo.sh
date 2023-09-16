@@ -15,8 +15,11 @@ if [ -z "${REPIC_UTILS}" ]; then REPIC_UTILS=0; fi
 if [ -z "${CRYOLO_ENV}" ]; then CRYOLO_ENV="cryolo"; fi
 if [ -z "${CRYOLO_FILTERED_DIR}" ]; then CRYOLO_FILTERED_DIR=${REPIC_OUT_DIR}/filtered_tmp/; fi
 
-eval "$(conda shell.bash hook)"
-conda activate ${CRYOLO_ENV}
+if [ -x "$(command -v micromamba)" ]; then
+  eval "$(micromamba shell hook -s bash)" && micromamba activate ${CRYOLO_ENV}
+elif [ -x "$(command -v conda)" ]; then
+  eval "$(conda shell.bash hook)" && conda activate ${CRYOLO_ENV}
+fi
 
 # create SPHIRE-crYOLO config file
 cryolo_gui.py config ${REPIC_OUT_DIR}/config_cryolo.json \
@@ -34,8 +37,6 @@ cryolo_predict.py -c ${REPIC_OUT_DIR}/config_cryolo.json \
     -o ${REPIC_OUT_DIR} \
     -t 0.0 \
     --write_empty
-
-conda deactivate
 
 #	save runtime to storage
 END=$(date +%s.%N)

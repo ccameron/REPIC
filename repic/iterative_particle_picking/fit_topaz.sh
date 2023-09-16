@@ -19,8 +19,11 @@ if [ -z "${TOPAZ_SCALE}" ]; then TOPAZ_SCALE=0; fi
 if [ -z "${TOPAZ_PARTICLE_RAD}" ]; then TOPAZ_PARTICLE_RAD=0; fi
 if [ -z "${TOPAZ_BALANCE}" ]; then TOPAZ_BALANCE=0.0625; fi
 
-eval "$(conda shell.bash hook)"
-conda activate ${TOPAZ_ENV}
+if [ -x "$(command -v micromamba)" ]; then
+  eval "$(micromamba shell hook -s bash)" && micromamba activate ${TOPAZ_ENV}
+elif [ -x "$(command -v conda)" ]; then
+  eval "$(conda shell.bash hook)" && conda activate ${TOPAZ_ENV}
+fi
 
 topaz convert -s ${TOPAZ_SCALE} \
     -o ${REPIC_OUT_DIR}/particles_train_downsampled.txt \
@@ -33,10 +36,13 @@ topaz convert -s ${TOPAZ_SCALE} \
 TOPAZ_NUM_PARTICLES=$(echo "$((${REPIC_NUM_PARTICLES} * 125/100))")
 
 #	train Topaz model
-topaz train -n ${TOPAZ_NUM_PARTICLES} \
+#	RESNET16 with 64 units suggested by A. Noble during NYSBC visit
+topaz train --num-particles ${TOPAZ_NUM_PARTICLES} \
     --num-workers 8 \
     --minibatch-size 64 \
     --minibatch-balance ${TOPAZ_BALANCE} \
+    --model resnet16 \
+    --units 64 \
     --train-images ${REPIC_TRAIN_MRC}/downsampled_mrc/ \
     --train-targets ${REPIC_OUT_DIR}/particles_train_downsampled.txt \
     --test-images ${REPIC_VAL_MRC}/downsampled_mrc/ \
@@ -47,8 +53,6 @@ topaz train -n ${TOPAZ_NUM_PARTICLES} \
 
 rm -f ${REPIC_OUT_DIR}/particles_train_downsampled.txt
 rm -f ${REPIC_OUT_DIR}/particles_val_downsampled.txt
-
-conda deactivate
 
 #	save runtime to storage
 END=$(date +%s.%N)

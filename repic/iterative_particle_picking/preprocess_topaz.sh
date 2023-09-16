@@ -15,8 +15,11 @@ if [ -z "${REPIC_OUT_DIR}" ]; then REPIC_OUT_DIR=0; fi
 if [ -z "${TOPAZ_ENV}" ]; then TOPAZ_ENV="topaz"; fi
 if [ -z "${TOPAZ_SCALE}" ]; then TOPAZ_SCALE=0; fi
 
-eval "$(conda shell.bash hook)"
-conda activate ${TOPAZ_ENV}
+if [ -x "$(command -v micromamba)" ]; then
+  eval "$(micromamba shell hook -s bash)" && micromamba activate ${TOPAZ_ENV}
+elif [ -x "$(command -v conda)" ]; then
+  eval "$(conda shell.bash hook)" && conda activate ${TOPAZ_ENV}
+fi
 
 #	downsample micrographs
 topaz preprocess -s ${TOPAZ_SCALE} \
@@ -31,8 +34,6 @@ topaz preprocess -s ${TOPAZ_SCALE} \
     --sample 1 \
     -o ${REPIC_TEST_MRC}/downsampled_mrc/ \
     ${REPIC_TEST_MRC}/*.mrc
-
-conda deactivate
 
 #	save runtime to storage
 END=$(date +%s.%N)

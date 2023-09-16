@@ -173,7 +173,7 @@ def main(args):
     use_defocus_values = True
     if not os.path.isfile(args.defocus_file):
         print(
-            f"Error - defocus file '{args.defocus_file}' not found. Micrographs will be equally weighted")
+            f"Warning - defocus file '{args.defocus_file}' not found. Micrographs will be equally weighted")
         use_defocus_values = False
     assert (os.path.isdir(args.box_dir)
             ), f"Error - particle directory '{args.box_dir}' does not exist"

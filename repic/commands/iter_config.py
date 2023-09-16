@@ -97,17 +97,13 @@ def main(args):
     del prefix, deep_files
 
     #   check that provided Conda environment names can be found
-    envs = []
     stdout = subprocess.check_output(
-        "conda info --envs", shell=True).decode(sys.stdout.encoding).strip()
-    for line in stdout.split('\n'):
-        if line.startswith(('#', ' ')):
-            continue
-        envs.append(line.split()[0])
+        "conda env list", shell=True).decode(sys.stdout.encoding).strip()
+    envs = [line.strip().split()[0] for line in stdout.split('\n')]
     envs = set([args.cryolo_env, args.deep_env, args.topaz_env]) - set(envs)
     assert (len(envs) ==
             0), f"Error - Conda environment(s) not found: {', '.join(envs)}"
-    del envs, stdout, line
+    del envs, stdout
 
     #   write JSON file of iter_pick parameters
     print(f"Writing config file to {args.out_file_path}")

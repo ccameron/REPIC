@@ -16,8 +16,11 @@ if [ -z "${DEEP_ENV}" ]; then DEEP_ENV="deep"; fi
 if [ -z "${DEEP_DIR}" ]; then DEEP_DIR="./DeepPicker-python"; fi
 if [ -z "${DEEP_MODEL}" ]; then DEEP_MODEL=${DEEP_DIR}/trained_model/model_demo_type3; fi
 
-eval "$(conda shell.bash hook)"
-conda activate ${DEEP_ENV}
+if [ -x "$(command -v micromamba)" ]; then
+  eval "$(micromamba shell hook -s bash)" && micromamba activate ${DEEP_ENV}
+elif [ -x "$(command -v conda)" ]; then
+  eval "$(conda shell.bash hook)" && conda activate ${DEEP_ENV}
+fi
 
 python ${DEEP_DIR}/autoPick.py \
     --inputDir ${REPIC_MRC_DIR}/ \
@@ -26,8 +29,6 @@ python ${DEEP_DIR}/autoPick.py \
     --outputDir ${REPIC_OUT_DIR}/STAR \
     --coordinate_symbol _deeppicker \
     --threshold 0.0
-
-conda deactivate
 
 #	save runtime to storage
 END=$(date +%s.%N)
