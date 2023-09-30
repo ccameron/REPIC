@@ -4,10 +4,12 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.8
+  - python
+  - pip
+  - astroid==2.15.8 # https://github.com/readthedocs/sphinx-autoapi/issues/407
   - repic
   - pandoc
-  - sphinx==6.2.1
+  - sphinx
   - sphinx_rtd_theme
   - sphinx-autoapi
   - pip:

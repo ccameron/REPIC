@@ -67,10 +67,12 @@ release = get_version()
 
 extensions = [
     'autoapi.extension',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx_search.extension'
 ]
 autoapi_dirs = ['../repic']
 autoapi_type = "python"
+autoapi_ignore = ['../repic/__init__.py']
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']

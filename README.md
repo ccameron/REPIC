@@ -119,17 +119,32 @@ A REPIC Docker image is published on both [DockerHub](https://hub.docker.com/r/c
 2. [Install and set up NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) for building and running GPU-accelerated containers
 3. Pull REPIC Docker image and convert to Singularity image format (SIF) (requires >8 Gb of memory and ~40 mins for conversion):
 ```
-apptainer pull docker://cjfcameron/repic:main
+apptainer pull docker://cjfcameron/repic
 ```
 If SIF file creation is taking a long time, increase the ```mksquashfs mem``` parameter in the Apptainer config file (apptainer.conf). See [here](https://apptainer.org/docs/admin/1.0/configfiles.html) for more information.
 
 4. Run container with GPU acceleration (example [iter_pick.py](https://github.com/ccameron/REPIC/blob/main/repic/commands/iter_pick.py) command shown below):
 ```
-apptainer run --nv --bind <file_path>/REPIC/examples:/examples repic_main.sif repic iter_pick /examples/10057/iter_config.json 4 100
+apptainer run --nv --bind <file_path>/REPIC/examples:/examples repic_latest.sif repic iter_pick /examples/10057/iter_config.json 4 100
 ```
 </p></details>
 
+**<details><summary>Run using Google Colab</summary><p>**
+
+A [Jupyter Notebook](https://jupyter.org/) for installing and running REPIC on [Google Colab](https://colab.google/) is included in the REPIC GitHub repo: [repic_colab.ipynb](https://github.com/ccameron/REPIC/blob/main/repic_colab.ipynb)
+
+To open the notebook in Google Colab:
+
+1. Navigate a browser to: https://colab.google/
+2. Select "Open Colab", then "GitHub"
+3. Enter the REPIC GitHub web URL: https://github.com/ccameron/REPIC.git
+4. Select the "repic_colab.ipynb" Jupyter Notebook
+
+</p></details>
+
 **<details><summary>Run using Scipion plugin</summary><p>**
+
+:warning: **WARNING**: Scipion plugin currently only contains REPIC one-shot mode
 
 REPIC is available as a [Scipion](https://scipion.i2pc.es/)  plugin: [https://github.com/scipion-em/scipion-em-repic](https://github.com/scipion-em/scipion-em-repic)
 
@@ -188,7 +203,7 @@ repic iter_config examples/10057/ 176 224 <file_path>/gmodel_phosnet_202005_N63_
 
 A configuration file ``` iter_config.json ``` will be created in the current working directory.
 
-3. Pick particles by iterative ensemble learning using a Python script wrapper [iter_pick.py](https://github.com/ccameron/REPIC/blob/main/repic/commands/iter_pick.py) of [run.sh](https://github.com/ccameron/REPIC/blob/main/repic/iterative_particle_picking/run.sh) (expected run time: 20-30 min/iteration):
+3. Pick particles by iterative ensemble learning using [iter_pick.py](https://github.com/ccameron/REPIC/blob/main/repic/commands/iter_pick.py), a wrapper of [run.sh](https://github.com/ccameron/REPIC/blob/main/repic/iterative_particle_picking/run.sh) (expected run time: 20-30 min/iteration):
 
 ```
 repic iter_pick ./iter_config.json 4 100
@@ -273,7 +288,7 @@ done
 
 ` <relion_path>/relion/CtfFind/job00[0-9]/*<mrc_suffix> ` should list all CTFFIND4 output files in RELION's ` CtfFind/ `.
 
-2. Iteratively pick particles using a Python script wrapper [iter_pick.py](https://github.com/ccameron/REPIC/blob/main/repic/commands/iter_pick.py) of [run.sh](https://github.com/ccameron/REPIC/blob/main/repic/iterative_particle_picking/run.sh):
+2. Iteratively pick particles using [iter_pick.py](https://github.com/ccameron/REPIC/blob/main/repic/commands/iter_pick.py), a wrapper of [run.sh](https://github.com/ccameron/REPIC/blob/main/repic/iterative_particle_picking/run.sh):
 ```
 usage: repic iter_pick [-h] [--semi_auto] [--score] [--out_file_path OUT_FILE_PATH] config_file num_iter train_size
 
@@ -307,6 +322,9 @@ Cameron, C.J.F., Seager, S.J.H., Sigworth, F.J., Tagare, H.D., and Gerstein, M.B
 For other concerns, please email [Christopher JF Cameron](mailto:christopher.cameron@yale.edu?subject=REPIC%20issue/question).
 
 ## Releases
+
+### new
+  - Google Colab integrated
 
 ### v0.2.1
  - Scipion plugin created
