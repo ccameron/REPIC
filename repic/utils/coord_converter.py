@@ -31,8 +31,10 @@ STAR_COL_C = "_rlnAutopickFigureOfMerit"
 """STAR file column name for figure of merit"""
 STAR_COL_N = "_rlnMicrographName"
 """STAR file column name for micrograph name"""
-DF_COL_NAMES = ["x", "y", "w", "h", "conf", "name"]
-"""default column names for Pandas data frame"""
+DF_COL_NAMES_2D = ["x", "y", "w", "h", "conf", "name"]
+"""default 2D column names for Pandas data frame"""
+DF_COL_NAMES_3D = ['x', 'y', 'z', 'w', 'h', 'd', "conf", "name"]
+"""default 3D column names for Pandas data frame"""
 STAR_HEADER_MAP = {
     "x": STAR_COL_X,
     "y": STAR_COL_Y,
@@ -49,6 +51,8 @@ CBOX_HEADER_MAP = {"x": 0, "y": 1, "w": 3, "h": 4, "conf": 8, "name": None}
 TSV_HEADER_MAP = {"x": 0, "y": 1, "w": None,
                   "h": None, "conf": 2, "name": None}
 """dictionary of header mappings for TSV file"""
+HEADER_MAP_3D = {'x': 0, 'y': 1, 'z': 2, "w": 3, "h": 4, 'd':5, "conf": 6, "name": None}
+"""dictionary of header mappings for POS file"""
 CS_HEADER_MAP = {
     "mrc_dims": 9,
     "x": 10,
@@ -176,6 +180,28 @@ def _path_occupied(path_str):
 
 
 # parsing
+
+
+def pos_to_df(path):
+    """
+    Converts 3D particle coordinate file (in *.pos format) to Pandas dataframe
+
+    Args:
+        path (str): filepath to particle bounding pos file
+
+    Returns:
+        obj: Pandas dataframe of particle bounding box coordinates
+    """
+    df = pd.read_csv(path,
+                     delim_whitespace=True,
+                     header=None,
+                     skip_blank_lines=True,
+                     skiprows=None)
+    # rename columns based on expected convention
+    df = df.rename(columns={old: new for old,
+                   new in zip(df.columns, HEADER_MAP_3D.keys())})
+
+    return df
 
 
 def cs_to_df(path):
@@ -391,8 +417,8 @@ def process_conversion(
     out_fmt,
     boxsize=None,
     out_dir=None,
-    in_cols=("auto", "auto", "auto", "auto", "auto", "auto"),
-    out_col_order=("x", "y", "w", "h", "conf", "name"),
+    in_cols=["auto", "auto", "auto", "auto", "auto", "auto", "auto", "auto"],
+    out_col_order=['x', 'y', 'z', 'w', 'h', 'd', "conf", "name"],
     suffix="",
     include_header=False,
     single_out=False,
@@ -414,8 +440,8 @@ def process_conversion(
     Keyword Args:
         boxsize (int or None): particle bounding box height/width
         out_dir (str or None): filepath to output file
-        in_cols (tuple): tuple of column determination (default=auto)
-        out_col_order (tuple): output column order
+        in_cols (list): tuple of column determination (default=auto)
+        out_col_order (list): output column order
         suffix (str): additional suffix for output files (default='')
         include_header (bool, default=False): include header in output file
         single_out (bool, default=False): output particle bounding box coordinates in a single file
@@ -429,13 +455,21 @@ def process_conversion(
     Returns:
         None
     """
+    convert_2D = False if in_fmt in ["pos", "box3d"] else True
+
     # set default columns as needed
     cols = {}
-    for i, col in enumerate(DF_COL_NAMES):
+    if convert_2D:
+        #   delete z dim parameter
+        del in_cols[2]
+        del in_cols[4]
+        del out_col_order[2]
+        del out_col_order[4]
+    for i, col in enumerate(DF_COL_NAMES_2D if convert_2D else DF_COL_NAMES_3D):
         cols[col] = in_cols[i] if in_cols[i] != "none" else None
+
     # read input files into dataframes
     dfs = {}
-
     try:
         if in_fmt == "star":
             default_cols = STAR_HEADER_MAP
@@ -452,6 +486,9 @@ def process_conversion(
         elif in_fmt == "tsv":
             default_cols = TSV_HEADER_MAP
             dfs = {p: tsv_to_df(p) for p in paths}
+        elif in_fmt in ["pos", "box3d"]:
+            default_cols = HEADER_MAP_3D
+            dfs = {p: pos_to_df(p) for p in paths}
         else:
             _log("unknown format", lvl=2)
     except pd.errors.ParserError as e:
@@ -482,31 +519,36 @@ def process_conversion(
                     rename_dict[cur_name] = new_name
         df = df.rename(columns=rename_dict)
 
+        colum_names = ('x', 'y', 'w', 'h') if convert_2D else ('x', 'y', 'z', 'w', 'h')
         try:
             # shift coordinates from center to corner if needed
-            if in_fmt in ("star", "tsv", "cs") and out_fmt in ("box",):
-                assert boxsize is not None, "Expected integer boxsize but got None"
-                df["w"] = boxsize
-                df["h"] = boxsize
-                for c in ("x", "y", "w", "h"):
-                    df[c] = df[c].astype(float)
-                df["x"] = df["x"] - df["w"].div(2)
-                df["y"] = df["y"] - df["h"].div(2)
-
+            if in_fmt in ("star", "tsv", "cs", "pos", "box3d") and out_fmt in ("box",):
+                assert (
+                    boxsize is not None), f"Expected integer boxsize but got {boxsize}"
+                df['w'] = boxsize
+                df['h'] = boxsize
+                if not convert_2D:
+                    df['d'] = boxsize
+                for cl in colum_names:
+                    df[cl] = df[cl].astype(float)
+                df['x'] = df['x'] - df['w'].div(2)
+                df['y'] = df['y'] - df['h'].div(2)
+                if not convert_2D:
+                    df['z'] = df['z'] - df['d'].div(2)
             # shift coordinates from corner to center if needed
             elif in_fmt in ("box",) and out_fmt in ("star", "tsv"):
-                for c in ("x", "y", "w", "h"):
-                    df[c] = df[c].astype(float)
-                df["x"] = df["x"] + df["w"].div(2)
-                df["y"] = df["y"] + df["h"].div(2)
+                for c in colum_names:
+                    df[cl] = df[cl].astype(float)
+                df['x'] = df['x'] + df['w'].div(2)
+                df['y'] = df['y'] + df['h'].div(2)
 
             if round_to is not None:
-                for cl in ("x", "y", "w", "h"):
+                for cl in colum_names:
                     if cl not in df.columns:
                         continue
                     df[cl] = df[cl].round(round_to)
                     if round_to == 0:
-                        df[cl] = df[cl].astype(int)
+                        df[cl] = df[cl].round(round_to).astype(int)
 
         except KeyError as e:
             _log(
@@ -515,6 +557,7 @@ def process_conversion(
             _log(f"unexpected type in input columns ({e})", lvl=2)
         except ValueError as e:
             _log(f"unexpected value in input columns ({e})", lvl=2)
+        del colum_names
 
         if norm_conf is not None and "conf" in df.columns:
             old_max, old_min = df["conf"].max(), df["conf"].min()
@@ -533,10 +576,12 @@ def process_conversion(
         if require_conf is not None and "conf" not in df.columns:
             df["conf"] = float(require_conf)
 
+        out_cols = ['x', 'y', 'z', 'w', 'h', 'd', "conf", "name"]
+        if convert_2D:
+            del out_cols[2]     # ["x", "y", "w", "h", "conf", "name"]
+            del out_cols[4]
         if out_fmt in ("star", "tsv"):
-            out_cols = ["x", "y", "conf", "name"]
-        elif out_fmt == "box":
-            out_cols = ["x", "y", "w", "h", "conf", "name"]
+            del out_cols[2:6]   # ["x", "y", "conf", "name"]
 
         out_dfs[name] = df[[x for x in out_cols if x in df.columns]]
 
@@ -608,13 +653,14 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-f",
-        choices=["star", "box", "cbox", "tsv", "cs"],  # CJC change
+        choices=["star", "box", "cbox", "tsv", "cs", "pos", "box3d"],
         help="Format FROM which to convert the input",
     )
     parser.add_argument(
         "-t",
         choices=["star", "box", "tsv"],
-        help="Format TO which to convert the input",
+        default="box",
+        help="Format TO which to convert the input. Only 'box' supports 3D coordinates.",
     )
     parser.add_argument(
         "-b",
@@ -624,24 +670,27 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-c",
-        nargs=6,
-        metavar=("X_COL", "Y_COL", "W_COL", "H_COL", "CONF_COL", "NAME_COL"),
-        default=("auto", "auto", "auto", "auto", "auto", "auto"),
-        help="Manually specify input column names (STAR) or zero-based indices "
-        "(BOX/TSV). This can be useful if input file does not follow default column "
-        "indices of the specified input (-f) format. Expects six positional arguments, "
-        "corresponding to: [x, y, w, g, conf, mrc_name]. Set a column to 'none' to "
-        "exclude it from conversion and 'auto' to keep its default value.",
+        nargs=8,
+        metavar=["X_COL", "Y_COL", "Z_COL", "W_COL",
+                 "H_COL", "D_COL" "CONF_COL", "NAME_COL"],
+        default=["auto", "auto", "auto", "auto",
+                 "auto", "auto", "auto", "auto"],
+        help="""Manually specify input column names (STAR) or zero-based indices
+        (BOX/TSV). This can be useful if input file does not follow default column
+        indices of the specified input (-f) format. Expects seven positional arguments,
+        corresponding to: [x, y, z, h, w, d, g, conf, mrc_name]. Set a column to 'none' to
+        exclude it from conversion and 'auto' to keep its default value. Z_COL AND D_COL
+        are dropped for 2D coordinate conversion. """,
     )
     parser.add_argument(
         "-d",
-        nargs=6,
-        default=("x", "y", "w", "h", "conf", "name"),
-        help="Manually specify the order of columns in output files (only applies to "
-        "BOX/TSV output formats). Expects six positional arguments, which should be "
-        "some ordering of the strings ['x', 'y', 'w', 'h', 'conf', 'name']. Use any "
-        "other string (like 'none') at any of the six positions to exclude the "
-        "missing column from the output.",
+        nargs=8,
+        default=['x', 'y', 'z', 'w', 'h', 'd', "conf", "name"],
+        help="""Manually specify the order of columns in output files (only applies to
+        BOX/TSV output formats). Expects six positional arguments, which should be
+        some ordering of the strings ['x', 'y', 'z', 'w', 'h', 'd', 'conf', 'name'].
+        Use any other string (like 'none') at any of the six positions to exclude the
+        missing column from the output. 'z' and 'd' are dropped for 2D conversion. """,
     )
     parser.add_argument(
         "-s",
