@@ -175,12 +175,12 @@ def main(args):
             del i, method
         except (UnboundLocalError, IndexError) as e:
             # create empty BOX file if particle bounding boxes are not picked by all methods
-            print("Skipping micrograph - not all methods have picked particles...")
+            print("Skipping micrograph - not all methods have picked particles")
             out_file = os.path.join(args.out_dir, ''.join(
                 [basename[1:-1], ".box"]))
             with open(out_file, 'wt') as o:
                 pass
-            return
+            continue
 
         print("Calculating Jaccard indices ... ")
         #   build k-d tree from x, y, and z coordinates with method key values
@@ -254,6 +254,7 @@ def main(args):
             # retain row / col indices for sparse matrix
             cols.extend([j] * k)
             rows.extend([v.index(val) for val in clique])
+            del j, clique, subgraph
         assert (len(cliques) == len(
             w)), "Error - concensus coordinates and ILP weight vector are not equal lengths"
         assert (len(w) == len(confidence)
@@ -263,7 +264,18 @@ def main(args):
         assert (len(cliques) * k == len(cols)
                 ), "Error - consensus coordinates or ILP sparse matrix indices (rows / cols) missing"
         A = coo_matrix(([1] * len(cols), (rows, cols)), shape=(len(v), n))
-        del n, v, rows, cols, j, clique, subgraph
+        del n, v, rows, cols
+
+        if len(cliques) == 0:
+            #   no cliques found
+            print("Skipping micrograph - no cliques found")
+            #   write empty BOX file
+            out_file = os.path.join(args.out_dir, ''.join(
+                [basename[1:-1], ".box"]))
+            with open(out_file, 'w') as o:
+                pass
+            del out_file, o
+            continue
 
         # write structures to storage for ILP optimization
         # add multi-out header

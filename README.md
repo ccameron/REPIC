@@ -91,7 +91,7 @@ conda activate repic
 ```
 6. Install REPIC using [pip](https://en.wikipedia.org/wiki/Pip_(package_manager)):
 ```
-pip install .
+python -m pip install .
 ```
 7. [Obtain a Gurobi license](https://www.gurobi.com/academia/academic-program-and-licenses/) and set Gurobi key:
 ```

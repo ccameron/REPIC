@@ -156,6 +156,7 @@ def main(args):
 
             #   SciPY only optimizes minimization problems
             w *= -1
+            print(w)
 
             #   restrict clique selection to integers
             integrality = np.ones_like(w)
@@ -243,9 +244,11 @@ def main(args):
         weights += confidences
 
     #   plot consensus particle weights
-    print("\nPlotting consensus particle weights ... ")
-    plot_particle_weights(args, weights, num_mrc, os.path.dirname(matrix_file))
-
+    try:
+        print("\nPlotting consensus particle weights ... ")
+        plot_particle_weights(args, weights, num_mrc, os.path.dirname(matrix_file))
+    except UnboundLocalError:
+        print("Warning - no ILP matrix files found")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
