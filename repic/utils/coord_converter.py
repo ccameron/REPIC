@@ -203,6 +203,22 @@ def pos_to_df(path):
 
     return df
 
+def xml_to_df(path):
+    """
+    Converts DeepFinder coordinate file (*.xml) to Pandas dataframe
+
+    Args:
+        path (str): filepath to coordinate file
+
+    Returns:
+        obj: Pandas dataframe of particle detection coordinates
+    """
+    df = pd.read_xml(path)
+    #   drop extra columns
+    df.drop(columns=['class_label', 'cluster_size'], axis=1, inplace=True)
+
+    return df
+
 
 def cs_to_df(path):
     """
@@ -455,7 +471,7 @@ def process_conversion(
     Returns:
         None
     """
-    convert_2D = False if in_fmt in ["pos", "box3d"] else True
+    convert_2D = False if in_fmt in ["pos", "box3d", "xml"] else True
 
     # set default columns as needed
     cols = {}
@@ -489,6 +505,9 @@ def process_conversion(
         elif in_fmt in ["pos", "box3d"]:
             default_cols = HEADER_MAP_3D
             dfs = {p: pos_to_df(p) for p in paths}
+        elif in_fmt == "xml":
+            default_cols = HEADER_MAP_3D
+            dfs = {p: xml_to_df(p) for p in paths}
         else:
             _log("unknown format", lvl=2)
     except pd.errors.ParserError as e:
@@ -522,7 +541,7 @@ def process_conversion(
         colum_names = ('x', 'y', 'w', 'h') if convert_2D else ('x', 'y', 'z', 'w', 'h')
         try:
             # shift coordinates from center to corner if needed
-            if in_fmt in ("star", "tsv", "cs", "pos", "box3d") and out_fmt in ("box",):
+            if in_fmt in ("star", "tsv", "cs", "pos", "box3d") and out_fmt in ("box"):
                 assert (
                     boxsize is not None), f"Expected integer boxsize but got {boxsize}"
                 df['w'] = boxsize
@@ -536,11 +555,18 @@ def process_conversion(
                 if not convert_2D:
                     df['z'] = df['z'] - df['d'].div(2)
             # shift coordinates from corner to center if needed
-            elif in_fmt in ("box",) and out_fmt in ("star", "tsv"):
+            elif in_fmt in ("box") and out_fmt in ("star", "tsv"):
                 for c in colum_names:
                     df[cl] = df[cl].astype(float)
                 df['x'] = df['x'] + df['w'].div(2)
                 df['y'] = df['y'] + df['h'].div(2)
+            # no shift but add box size
+            elif in_fmt in ("xml") and out_fmt in ("box"):
+                assert (
+                    boxsize is not None), f"Expected integer boxsize but got {boxsize}"
+                df['w'] = boxsize
+                df['h'] = boxsize
+                df['d'] = boxsize
 
             if round_to is not None:
                 for cl in colum_names:
@@ -653,7 +679,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-f",
-        choices=["star", "box", "cbox", "tsv", "cs", "pos", "box3d"],
+        choices=["star", "box", "cbox", "tsv", "cs", "pos", "box3d", "xml"],
         help="Format FROM which to convert the input",
     )
     parser.add_argument(
@@ -671,8 +697,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "-c",
         nargs=8,
-        metavar=["X_COL", "Y_COL", "Z_COL", "W_COL",
-                 "H_COL", "D_COL" "CONF_COL", "NAME_COL"],
+        metavar=("X_COL", "Y_COL", "Z_COL", "W_COL",
+                 "H_COL", "D_COL", "CONF_COL", "NAME_COL"),
         default=["auto", "auto", "auto", "auto",
                  "auto", "auto", "auto", "auto"],
         help="""Manually specify input column names (STAR) or zero-based indices
@@ -751,7 +777,7 @@ if __name__ == "__main__":
     a = parser.parse_args()
 
     # validation
-    if a.f in ("star", "tsv") and a.t != "star" and a.b is None:
+    if a.f in ("star", "tsv", "xml") and a.t != "star" and a.b is None:
         _log(f"box size required for '{a.f}' input", lvl=2)
     if a.single_out and a.multi_out:
         _log(f"cannot fulfill both single_out and multi_out flags", lvl=2)
