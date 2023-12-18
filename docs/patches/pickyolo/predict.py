@@ -37,6 +37,7 @@ class Prediction:
         self.tomo_height = None
         self.eval_threshold_distance = eval_threshold_distance
         self.voxel_size = voxel_size
+        self.obj_thres = 0.5    #   REPIC_PATCH
 
     def setArgs(self, input_path: str, model_path: str, result_path: str, ground_truth_file_path: str = None,
                 vis_pred= True):
@@ -88,6 +89,8 @@ class Prediction:
         parser.add_argument('--eval_images', action="store_true", default=False, help="Creates images for TP, Fp & FN")
         parser.add_argument('--obj_thres', type=float, default=0.5, help="Specify the OBJECTNESS_THRESHOLD for identifying 2D particle slices (default=0.5)")   #   REPIC_PATCH
         args = parser.parse_args(SYS.argv[3:])
+        self.obj_thres = args.obj_thres    #   REPIC_PATCH
+        del args.obj_thres                 #   REPIC_PATCH
         self.args = args
         self.setArgs(args.input_path, args.model, args.result_path, args.eval)
 
@@ -186,7 +189,7 @@ class Prediction:
         clusteredPredictions = []
 
         for s in range(self.netOutput.shape[0]):
-            preds = NET.extractPredictions(self.netOutput[s], inputSize=(self.tomo_width, self.tomo_height), objectness_threshold=self.args.obj_thres)  #   REPIC_PATCH
+            preds = NET.extractPredictions(self.netOutput[s], inputSize=(self.tomo_width, self.tomo_height), objectness_threshold=self.obj_thres)  #   REPIC_PATCH
             for (x, y, conf) in preds:                                          #   REPIC_PATCH
                 unclusteredPredictions.append((s, x, y, conf))                  #   REPIC_PATCH
         if unclusteredPredictions:
