@@ -13,5 +13,5 @@ dependencies:
   - sphinx_rtd_theme
   - sphinx-autoapi
   - pip:
-      - readthedocs-sphinx-search
+      - readthedocs-sphinx-search>=0.3.2
 prefix: /Users/ccameron/miniconda3/envs/repic
