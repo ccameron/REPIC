@@ -48,14 +48,15 @@ def add_arguments(parser):
         None
     """
     parser.add_argument(
-        "data_dir", help="path to directory containing training data")
+        "data_dir", type=str, help="path to directory containing training data")
     parser.add_argument("box_size", type=int,
                         help="particle bounding box size (in int[pixels])")
     parser.add_argument("exp_particles", type=int,
                         help="number of expected particles (int)")
     parser.add_argument(
-        "cryolo_model", help="path to LOWPASS SPHIRE-crYOLO model")
-    parser.add_argument("deep_dir", help="path to DeepPicker scripts")
+        "cryolo_model", type=str, help="path to LOWPASS SPHIRE-crYOLO model")
+    parser.add_argument("deep_dir", type=str,
+                        help="path to DeepPicker scripts")
     parser.add_argument("topaz_scale", type=int,
                         help="Topaz scale value (int)")
     parser.add_argument("topaz_rad", type=int,
@@ -64,8 +65,12 @@ def add_arguments(parser):
                         help=f"Conda environment name or prefix for SPHIRE-crYOLO installation (default:{env_dict['cryolo']})")
     parser.add_argument("--deep_env", type=str, default=env_dict['deep'],
                         help=f"Conda environment name or prefix for DeepPicker installation (default:{env_dict['deep']})")
+    parser.add_argument(
+        "--deep_model", help="path to pre-trained DeepPicker model (default:out-of-the-box model)")
     parser.add_argument("--topaz_env", type=str, default=env_dict['topaz'],
                         help=f"Conda environment name or prefix for Topaz installation (default:{env_dict['topaz']})")
+    parser.add_argument(
+        "--topaz_model", help="path to pre-trained Topaz model (default:out-of-the-box model)")
     parser.add_argument("--out_file_path", type=str, default="iter_config.json",
                         help="path for created config file (default:./iter_config.json)")
 
@@ -104,6 +109,14 @@ def main(args):
     assert (len(envs) ==
             0), f"Error - Conda environment(s) not found: {', '.join(envs)}"
     del envs, stdout
+
+    #   check if optional models provided and are valid
+    if not args.deep_model is None:
+        assert (os.path.exists(os.path.dirname(args.deep_model))
+                ), f"Error - provided DeepPicker model not found: {args.deep_model}"
+    if not args.topaz_model is None:
+        assert (os.path.exists(args.topaz_model)
+                ), f"Error - provided Topaz model not found: {args.topaz_model}"
 
     #   write JSON file of iter_pick parameters
     print(f"Writing config file to {args.out_file_path}")

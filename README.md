@@ -250,7 +250,8 @@ optional arguments:
 
 1. Create a configuration file for iterative ensemble particle picking using [iter_config.py](https://github.com/ccameron/REPIC/blob/main/repic/commands/iter_config.py):
 ```
-usage: repic iter_config [-h] [--cryolo_env CRYOLO_ENV] [--deep_env DEEP_ENV] [--topaz_env TOPAZ_ENV] [--out_file_path OUT_FILE_PATH]
+usage: repic iter_config [-h] [--cryolo_env CRYOLO_ENV] [--deep_env DEEP_ENV] [--deep_model DEEP_MODEL] [--topaz_env TOPAZ_ENV]
+                         [--topaz_model TOPAZ_MODEL] [--out_file_path OUT_FILE_PATH]
                          data_dir box_size exp_particles cryolo_model deep_dir topaz_scale topaz_rad
 
 positional arguments:
@@ -267,8 +268,12 @@ optional arguments:
   --cryolo_env CRYOLO_ENV
                         Conda environment name or prefix for SPHIRE-crYOLO installation (default:cryolo)
   --deep_env DEEP_ENV   Conda environment name or prefix for DeepPicker installation (default:deep)
+  --deep_model DEEP_MODEL
+                        path to pre-trained DeepPicker model (default:out-of-the-box model)
   --topaz_env TOPAZ_ENV
                         Conda environment name or prefix for Topaz installation (default:topaz)
+  --topaz_model TOPAZ_MODEL
+                        path to pre-trained Topaz model (default:out-of-the-box model)
   --out_file_path OUT_FILE_PATH
                         path for created config file (default:./iter_config.json)
 ```
@@ -290,7 +295,7 @@ done
 
 2. Iteratively pick particles using [iter_pick.py](https://github.com/ccameron/REPIC/blob/main/repic/commands/iter_pick.py), a wrapper of [run.sh](https://github.com/ccameron/REPIC/blob/main/repic/iterative_particle_picking/run.sh):
 ```
-usage: repic iter_pick [-h] [--semi_auto] [--score] [--out_file_path OUT_FILE_PATH] config_file num_iter train_size
+usage: repic iter_pick [-h] [--semi_auto] [--sample_prob SAMPLE_PROB] [--score] [--out_file_path OUT_FILE_PATH] config_file num_iter train_size
 
 positional arguments:
   config_file           path to REPIC config file
@@ -300,6 +305,8 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --semi_auto           initialize training labels with known particles (semi-automatic)
+  --sample_prob SAMPLE_PROB
+                        sampling probability of initial training labels for 'semi_auto' (default:1.)
   --score               evaluate picked particle sets
   --out_file_path OUT_FILE_PATH
                         path for picking log file (default:<data_dir>/iter_pick.log)

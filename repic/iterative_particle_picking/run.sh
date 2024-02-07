@@ -21,17 +21,20 @@ export REPIC_NUM_PARTICLES=${4}
 LABEL=${5}
 export REPIC_TRAIN_MRC=${IN_DIR}/iterative_particle_picking/train/${LABEL}
 if [ "auto" = ${6} ]; then USE_MANUAL_LABELS=false; else USE_MANUAL_LABELS=true;fi
-if [[ "${7}" == 1 ]]; then GET_SCORE=true; else GET_SCORE=false; fi
+export SAMPLE_PROB=${7}
+if [[ "${8}" == 1 ]]; then GET_SCORE=true; else GET_SCORE=false; fi
 export REPIC_VAL_MRC=${IN_DIR}/iterative_particle_picking/val/
 export REPIC_TEST_MRC=${IN_DIR}/iterative_particle_picking/test
 REPIC_COORD=${IN_DIR}/iterative_particle_picking
-export CRYOLO_ENV=${8}
-export CRYOLO_MODEL=${9}
-export DEEP_ENV=${10}
-export DEEP_DIR=${11}
-export TOPAZ_ENV=${12}
-export TOPAZ_SCALE=${13}
-export TOPAZ_PARTICLE_RAD=${14}
+export CRYOLO_ENV=${9}
+export CRYOLO_MODEL=${10}
+export DEEP_ENV=${11}
+export DEEP_DIR=${12}
+export DEEP_MODEL=${13}
+export TOPAZ_ENV=${14}
+if [ "None" = ${15} ]; then :; else export TOPAZ_MODEL=${15}; fi
+export TOPAZ_SCALE=${16}
+export TOPAZ_PARTICLE_RAD=${17}
 
 #  CrYOLO filtered micrograph directory
 export CRYOLO_FILTERED_DIR=${IN_DIR}/iterative_particle_picking/cryolo_filtered_tmp
@@ -60,11 +63,11 @@ mkdir -p ${SUB_DIR}
 if ! ${USE_MANUAL_LABELS}; then
 
   ##
-  #  step 2 - apply general models to train and test sets
+  #  step 2 - apply pre-trained models to train and test sets
   ##
 
   echo -e """\n--- Identifying particles in '${LABEL}' ---
-  Applying general models to train, val, and test micrographs ...
+  Applying pre-trained models to train, val, and test micrographs ...
   --- Round: 0 ---
   \tSPHIRE-crYOLO ... "
   # SPHIRE-crYOLO
@@ -187,7 +190,7 @@ else
   while [ $(cat ${REPIC_OUT_DIR}/*.box | wc -l) -le 4 ]; do	#	ensure there are enough examples sampled
     for file in ${REPIC_TRAIN_MRC}/*.box; do
       base=$(basename ${file})
-      cat ${file} | awk 'BEGIN {srand()} !/^$/ { if (rand() <= 0.01) print $0}' > ${REPIC_OUT_DIR}/${base}
+      cat ${file} | awk -v prob=${SAMPLE_PROB} 'BEGIN {srand()} !/^$/ { if (rand() <= prob) print $0}' > ${REPIC_OUT_DIR}/${base}
       perl -i -pe 's/(\d*\.\d*)/int($1+0.5)/ge' ${REPIC_OUT_DIR}/${base}
     done
   done
@@ -199,7 +202,7 @@ else
   while [ $(cat ${REPIC_OUT_DIR}/*.box | wc -l) -le 4 ]; do
     for file in ${REPIC_VAL_MRC}/*.box; do
       base=$(basename ${file})
-      cat ${file} | awk 'BEGIN {srand()} !/^$/ { if (rand() <= 0.01) print $0}' > ${REPIC_OUT_DIR}/${base}
+      cat ${file} | awk -v prob=${SAMPLE_PROB} 'BEGIN {srand()} !/^$/ { if (rand() <= prob) print $0}' > ${REPIC_OUT_DIR}/${base}
       perl -i -pe 's/(\d*\.\d*)/int($1+0.5)/ge' ${REPIC_OUT_DIR}/${base}
     done
   done

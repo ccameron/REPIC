@@ -29,6 +29,8 @@ def add_arguments(parser):
                         help="training subset percentage (int)")
     parser.add_argument("--semi_auto", action="store_true",
                         help="initialize training labels with known particles (semi-automatic)")
+    parser.add_argument("--sample_prob", type=float, default=1.,
+                        help=f"sampling probability of initial training labels for 'semi_auto' (default:1.)")
     parser.add_argument("--score", action="store_true",
                         help="evaluate picked particle sets")
     parser.add_argument("--out_file_path", type=str,
@@ -42,6 +44,14 @@ def main(args):
     Args:
         args (obj): argparse command line argument object
     """
+    #   validate command line arguments
+    assert (os.path.exists(args.config_file)
+            ), f"Error - provided config file not found: {args.config_file}"
+    assert (isinstance(args.num_iter, int)
+            ), f"Error - num_iter should be an integer. Found {args.num_iter}"
+    assert (0. <= args.sample_prob <= 1.
+            ), f"Error - sample_prob should be a float within [0, 1]. Found: {args.sample_prob}"
+
     #   load JSON config file
     with open(args.config_file, 'rt') as f:
         params_dict = json.load(f)
@@ -61,12 +71,16 @@ def main(args):
         str(params_dict["exp_particles"]),
         ''.join(["train_", str(args.train_size)]),
         "semi" if args.semi_auto else "auto",
+        str(args.sample_prob),
         '1' if args.score else '0',
         params_dict["cryolo_env"],
         params_dict["cryolo_model"],
         params_dict["deep_env"],
         params_dict["deep_dir"],
+        params_dict["deep_model"] if not params_dict["deep_model"] is None else os.path.join(
+            params_dict["deep_env"], "trained_model", "model_demo_type3"),
         params_dict["topaz_env"],
+        str(params_dict["topaz_model"]),
         str(params_dict["topaz_scale"]),
         str(params_dict["topaz_rad"]),
     ]
