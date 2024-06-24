@@ -7,7 +7,7 @@
 <img width="20%" src="imgs/repic_icon.png">
 
 ## Overview
-<ins>RE</ins>liable <ins>PI</ins>cking by <ins>C</ins>onsensus (REPIC) is an ensemble learning approach to cryogenic-electron microscopy (cryo-EM) particle picking. It identifies particles common to multiple picked particle sets (i.e., consensus particles) using graph theory and integer linear programming (ILP). Picked particle sets may be found by a human specialist (manual), template matching, mathematical function (e.g., RELION's Laplacian-of-Gaussian auto-picking), or machine-learning method. A schematic representation of REPIC applied to the output of three CNN-based particle pickers is below:
+<ins>RE</ins>liable <ins>PI</ins>cking by <ins>C</ins>onsensus (REPIC) is a consensus methodology for harnessing multiple cryogenic-electron microscopy (cryo-EM) particle picking algorithms. It identifies particles common to multiple picked particle sets (i.e., consensus particles) using graph theory and integer linear programming (ILP). Picked particle sets may be found by a human specialist (manual), template matching, mathematical function (e.g., RELION's Laplacian-of-Gaussian auto-picking), or machine-learning method. A schematic representation of REPIC applied to the output of three CNN-based particle pickers is below:
 
 <p align="center">
 <img width="60%" src="https://github.com/ccameron/REPIC/blob/main/imgs/repic_overview.png">
