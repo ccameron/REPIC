@@ -9,7 +9,7 @@ dependencies:
   - astroid==2.15.8 # https://github.com/readthedocs/sphinx-autoapi/issues/407
   - repic
   - pandoc
-  - sphinx
+  - sphinx<7.0.0
   - sphinx_rtd_theme
   - sphinx-autoapi
   - pip:
