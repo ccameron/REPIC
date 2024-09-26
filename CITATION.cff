@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Cameron"
+    given-names: "Christopher JF"
+    orcid: https://orcid.org/0000-0003-4088-0957
+  - family-names: "Seager"
+    given-names: "Sebastian JH"
+  - family-names: "Sigworth"
+    given-names: "Fred J"
+  - family-names: "Tagare"
+    given-names: "Hemant D"
+  - family-names: "Gerstein"
+    given-names: "Mark B"
+title: "REPIC - an ensemble learning methodology for cryo-EM particle picking"
+version: v1.0.0
+doi: 10.1101/2023.05.13.540636v1
+date-released: 2023-05-14
+url: "https://github.com/ccameron/REPIC"
