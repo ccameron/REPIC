@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   ca-certificates \
   && wget -qO-  https://micromamba.snakepit.net/api/micromamba/linux-64/latest | tar -xvj bin/micromamba \
   && touch /root/.bashrc \
-  && /bin/micromamba shell init -s bash -p /opt/conda \
+  && /bin/micromamba shell init -s bash -r /opt/conda \
   && grep -v '[ -z "\$PS1" ] && return' /root/.bashrc  > /opt/conda/bashrc \
   && apt-get clean autoremove --yes \
   && rm -rf /var/lib/{apt,dpkg,cache,log}
