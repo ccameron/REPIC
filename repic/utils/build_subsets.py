@@ -7,12 +7,18 @@
     Creates cross-validation subsets for iterative ensemble particle picking
 """
 
-import mrcfile
+import argparse
+import matplotlib.pyplot as plt  # type: ignore
+import mrcfile  # type: ignore
+import numpy as np  # type: ignore
+import os
+import sys
 import warnings
 
-from common import *
+from common import adjust_plot_attributes, create_dir, del_dir
 from bisect import bisect, bisect_right
-from tqdm import tqdm
+from glob import glob  # type: ignore
+from tqdm import tqdm  # type: ignore
 
 name = "build_subsets"
 """str: module name (used by argparse subparser)"""
@@ -30,18 +36,31 @@ def add_arguments(parser):
     Returns:
         None
     """
-    parser.add_argument("defocus_file", type=str,
-                        help="filepath to RELION CTFFIND4 defocus values")
-    parser.add_argument("box_dir", type=str,
-                        help="filepath to directory containing particle BOX files (*.box)")
-    parser.add_argument("mrc_dir", type=str,
-                        help="filepath to directory containing micrograph MRC files (*.mrc)")
-    parser.add_argument("out_dir", type=str,
-                        help="filepath to output directory")
-    parser.add_argument("--train_set", type=str,
-                        help="check if specific training subset is available after dataset splitting")
-    parser.add_argument("--ignore_test", default=False, action="store_true",
-                        help="only build train and val datasets (no test subsets)")
+    parser.add_argument(
+        "defocus_file", type=str, help="filepath to RELION CTFFIND4 defocus values"
+    )
+    parser.add_argument(
+        "box_dir",
+        type=str,
+        help="filepath to directory containing particle BOX files (*.box)",
+    )
+    parser.add_argument(
+        "mrc_dir",
+        type=str,
+        help="filepath to directory containing micrograph MRC files (*.mrc)",
+    )
+    parser.add_argument("out_dir", type=str, help="filepath to output directory")
+    parser.add_argument(
+        "--train_set",
+        type=str,
+        help="check if specific training subset is available after dataset splitting",
+    )
+    parser.add_argument(
+        "--ignore_test",
+        default=False,
+        action="store_true",
+        help="only build train and val datasets (no test subsets)",
+    )
 
 
 def calc_subsets(n, s=3):
@@ -93,14 +112,16 @@ def create_symlinks(args, files, label):
     create_dir(sub_dir)
     for fname, defocus in files:
 
-        basename = '.'.join(os.path.basename(fname).split('.')[:-1])
+        basename = ".".join(os.path.basename(fname).split(".")[:-1])
         # particle BOX file
-        src = os.path.join(args.box_dir, '.'.join([basename, "box"]))
+        src = os.path.join(args.box_dir, ".".join([basename, "box"]))
         if os.path.isfile(src):
-            os.symlink(src, os.path.join(sub_dir, '.'.join([basename, "box"])))
+            os.symlink(src, os.path.join(sub_dir, ".".join([basename, "box"])))
         # micrograph MRC file
-        os.symlink(os.path.join(args.mrc_dir, '.'.join([basename, "mrc"])),
-                   os.path.join(sub_dir, '.'.join([basename, "mrc"])))
+        os.symlink(
+            os.path.join(args.mrc_dir, ".".join([basename, "mrc"])),
+            os.path.join(sub_dir, ".".join([basename, "mrc"])),
+        )
     del fname, defocus, sub_dir, basename
 
 
@@ -120,7 +141,8 @@ def plot_defocus(data, low, med, out_file):
     fnames, defocus = zip(*data)
     fig, ax = plt.subplots(1, 1, figsize=(8, 8))
     y_range, x_domain, _ = ax.hist(
-        defocus, bins=32, facecolor="tab:blue", edgecolor='k')
+        defocus, bins=32, facecolor="tab:blue", edgecolor="k"
+    )
     # add low, medium, and high bin lines
     ax.axvline(low[-1][1], color="tab:red", lw=2)
     if len(med) > 0:
@@ -128,17 +150,17 @@ def plot_defocus(data, low, med, out_file):
     # add low, medium, and high text labels
     x = (x_domain.min() + low[-1][1]) / 2
     y = y_range.max() * 1.1
-    ax.text(x, y, "low", size=16, color='k', ha="center")
+    ax.text(x, y, "low", size=16, color="k", ha="center")
     if len(med) > 0:
         x = (low[-1][1] + med[-1][1]) / 2
-        ax.text(x, y, "medium", size=16, color='k', ha="center")
+        ax.text(x, y, "medium", size=16, color="k", ha="center")
         x = (med[-1][1] + x_domain.max()) / 2
     else:
         x = (low[-1][1] + x_domain.max()) / 2
-    ax.text(x, y, "high", size=16, color='k', ha="center")
+    ax.text(x, y, "high", size=16, color="k", ha="center")
     adjust_plot_attributes(ax, "mean defocus value", "frequency")
     plt.tight_layout()
-    plt.savefig(out_file, bbox_inches='tight', dpi=300)
+    plt.savefig(out_file, bbox_inches="tight", dpi=300)
     plt.close(fig)
     del ax, fig, data, fnames, defocus, y_range, x_domain, x, y
 
@@ -173,12 +195,15 @@ def main(args):
     use_defocus_values = True
     if not os.path.isfile(args.defocus_file):
         print(
-            f"Warning - defocus file '{args.defocus_file}' not found. Micrographs will be equally weighted")
+            f"Warning - defocus file '{args.defocus_file}' not found. Micrographs will be equally weighted"
+        )
         use_defocus_values = False
-    assert (os.path.isdir(args.box_dir)
-            ), f"Error - particle directory '{args.box_dir}' does not exist"
-    assert (os.path.isdir(args.mrc_dir)
-            ), f"Error - micrograph directory '{args.mrc_dir}' does not exist"
+    assert os.path.isdir(
+        args.box_dir
+    ), f"Error - particle directory '{args.box_dir}' does not exist"
+    assert os.path.isdir(
+        args.mrc_dir
+    ), f"Error - micrograph directory '{args.mrc_dir}' does not exist"
 
     # set absolute paths for all directories
     args.box_dir = os.path.abspath(args.box_dir)
@@ -191,7 +216,7 @@ def main(args):
     data = []
     if use_defocus_values:
         # parse defocus file
-        with open(args.defocus_file, 'rt') as f:
+        with open(args.defocus_file, "rt") as f:
             for line in f:
                 fname, defocus_x, defocus_y = line.rstrip().split()
                 defocus_x, defocus_y = (float(defocus_x), float(defocus_y))
@@ -202,12 +227,12 @@ def main(args):
         print(f"Checking for valid MRC files in {args.mrc_dir} ...")
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")  # ignore runtime warnings
-            for file in tqdm(glob.glob(os.path.join(args.mrc_dir, '*'))):
+            for file in tqdm(glob.glob(os.path.join(args.mrc_dir, "*"))):
                 try:
                     with mrcfile.open(file, permissive=True) as mrc:
                         vals = mrc.data
                     if len(vals.shape) == 2:  # single-frame micrograph
-                        data.append((file, 1.))
+                        data.append((file, 1.0))
                 except (AttributeError, ValueError, IsADirectoryError):
                     continue
         print(f"{len(data)} valid MRC files found")
@@ -220,19 +245,19 @@ def main(args):
     n = len(data)
     data = sorted(data, key=lambda x: float(x[1]))
     fnames, defocus = zip(*data)
-    low, med = [((defocus[-1] - defocus[0]) * val) + defocus[0]
-                for val in [0.33, 0.66]]
+    low, med = [((defocus[-1] - defocus[0]) * val) + defocus[0] for val in [0.33, 0.66]]
     # build low subset
     i = bisect(defocus, low)
-    low = data[:i + 1]
+    low = data[: i + 1]
     # build medium and high
     j = bisect(defocus, med)
-    med = data[i + 1:j + 1]
-    high = data[j + 1:]
+    med = data[i + 1 : j + 1]
+    high = data[j + 1 :]
     del i, j
-    assert (len(data) == (len(low) + len(med) + len(high))
-            ), "Error - subset lengths do not equal original data"
-    out_file = '.'.join(args.defocus_file.split('.')[:-1] + ["png"])
+    assert len(data) == (
+        len(low) + len(med) + len(high)
+    ), "Error - subset lengths do not equal original data"
+    out_file = ".".join(args.defocus_file.split(".")[:-1] + ["png"])
     plot_defocus(data, low, med, out_file)
     del out_file
 
@@ -263,10 +288,11 @@ def main(args):
 
     # check training subset is available
     if not args.train_set == None:
-        train_set = int(args.train_set.split('_')[-1])
+        train_set = int(args.train_set.split("_")[-1])
         if not train_set in subset_dict.keys():
             print(
-                f"Error - training subset '{args.train_set}' not available. Try a larger training subset or increase available data")
+                f"Error - training subset '{args.train_set}' not available. Try a larger training subset or increase available data"
+            )
             sys.exit(-2)
 
     # build validation set
@@ -281,8 +307,9 @@ def main(args):
         # build test set (group together remaining examples)
         test = sum(bins, [])
 
-        assert (len(train) + len(val) + len(test) ==
-                n), "Error - examples lost while building subsets"
+        assert (
+            len(train) + len(val) + len(test) == n
+        ), "Error - examples lost while building subsets"
         del n, bins, curr_bin
 
     ###
@@ -291,9 +318,12 @@ def main(args):
 
     # setup directory hiearchy
     for key in subset_dict.keys():
-        label = "train" if args.ignore_test else os.path.join(
-            "train", ''.join(["train_", str(key)]))
-        create_symlinks(args, train[:subset_dict[key]], label)
+        label = (
+            "train"
+            if args.ignore_test
+            else os.path.join("train", "".join(["train_", str(key)]))
+        )
+        create_symlinks(args, train[: subset_dict[key]], label)
     create_symlinks(args, val, "val")
     del key, label, train, val
     if not args.ignore_test:
@@ -301,7 +331,7 @@ def main(args):
         del test
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     """obj: argparse parse_args() object"""
     add_arguments(parser)
