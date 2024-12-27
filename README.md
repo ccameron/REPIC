@@ -321,17 +321,18 @@ The REPIC software has been tested on two computer systems:
 ## Citing REPIC
 If REPIC was used in your analysis/study, please cite:
 
-Cameron, C.J.F., Seager, S.J.H., Sigworth, F.J., Tagare, H.D., and Gerstein, M.B. **REPIC - an ensemble learning methodology for cryo-EM particle picking**. *BioRxiv*. DOI: [10.1101/2023.05.13.540636v1](https://www.biorxiv.org/content/10.1101/2023.05.13.540636v1)
+Cameron, C.J.F., Seager, S.J.H., Sigworth, F.J., Tagare, H.D., and Gerstein, M.B. **REliable PIcking by Consensus (REPIC): a consensus methodology for harnessing multiple cryo-EM particle pickers**. *Commun Biol*. DOI: [10.1038/s42003-024-07045-0](https://doi.org/10.1038/s42003-024-07045-0)
 
 ##  Contact
 [Submitting a GitHub issue](https://github.com/ccameron/REPIC/issues) is preferred for all problems related to REPIC.
 
-For other concerns, please email [Christopher JF Cameron](mailto:christopher.cameron@yale.edu?subject=REPIC%20issue/question).
+For other concerns, please email [Christopher JF Cameron](mailto:c.jf.cameron@gmail.com?subject=REPIC%20issue/question).
 
 ## Releases
 
-### new
+### v1.0.0
   - Google Colab integrated
+  - Release created for Nature Communications Biology publication
 
 ### v0.2.1
  - Scipion plugin created
