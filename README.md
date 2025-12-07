@@ -142,6 +142,11 @@ To open the notebook in Google Colab:
 
 </p></details>
 
+**<details><summary>Run using SBGrid</summary><p>**
+
+REPIC is available through the [SBGrid Consortium](https://sbgrid.org/) software collection: [https://sbgrid.org/software/titles/repic](https://sbgrid.org/software/titles/repic)
+</p></details>
+
 **<details><summary>Run using Scipion plugin</summary><p>**
 
 :warning: **WARNING**: Scipion plugin currently only contains REPIC one-shot mode
